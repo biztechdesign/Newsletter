@@ -70,6 +70,12 @@ def save_marketing_highlights(page, out_dir):
     if section is None or not section.is_visible():
         return None
 
+    # bounding_box() is viewport-relative, and so is a plain page.screenshot()
+    # clip — but the per-section loop above has left the page scrolled somewhere
+    # arbitrary, so the clip can fall partly (or entirely) outside the viewport
+    # and get silently truncated to zero height. Scroll back to the top and pair
+    # the boxes with full_page=True, which makes the clip document-relative.
+    page.evaluate("window.scrollTo(0, 0)")
     section_box = section.bounding_box()
     divider = page.query_selector("section.sec-marketing .sub-divider")
     divider_box = divider.bounding_box()
@@ -81,6 +87,7 @@ def save_marketing_highlights(page, out_dir):
     page.screenshot(
         path=str(bg_path),
         type="png",
+        full_page=True,
         clip={
             "x": section_box["x"],
             "y": section_box["y"],
