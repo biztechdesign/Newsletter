@@ -8,15 +8,19 @@ Auto-generates content.json from two Google Sheets:
 Both sheets must be shared as "Anyone with the link can view".
 
 Usage:
-    python import_content.py
+    python import_content.py          → content.json + browser-preview HTML
+    python import_content.py --all    → also runs steps 2 and 4 below
 
-This also renders the browser-preview HTML (generate.py) and refreshes the
-per-section JPGs in output/sections/ automatically — no separate steps needed
-just to see the updated content.
+This stops at the browser preview so the content can be checked before the
+section images are cut. The full monthly flow is:
+
+    1. python import_content.py         → content.json + preview HTML
+       ...review the preview, fix the sheet/images and re-run until approved
+    2. python screenshot_sections.py    → one PNG per section in output/sections/
+    3. upload output/sections/*.png     → see output/sections/UPLOAD_ME.txt
+    4. python generate_simple_email.py  → final Gmail/Outlook-safe email HTML
 
 Update the SHEET IDs at the top when working on a new month.
-Only if sending via Gmail, additionally run:
-    python generate.py --email
 """
 
 import io
@@ -872,12 +876,25 @@ def main():
     OUTPUT.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"\nDone -> {OUTPUT}")
 
-    # ── Step 5: Render browser-preview HTML + refresh per-section JPGs ─────
-    print("\nRendering updated newsletter and section images...")
+    # ── Step 5: Render the browser-preview HTML for review ────────────────
+    # This stops at the preview on purpose: the section PNGs are what actually
+    # get mailed, so they're only worth regenerating once the content in the
+    # preview has been approved. Pass --all to run the whole chain in one go.
+    print("\nRendering updated newsletter for review...")
     subprocess.run([sys.executable, str(BASE_DIR / "generate.py")], check=True)
-    subprocess.run([sys.executable, str(BASE_DIR / "screenshot_sections.py")], check=True)
 
-    print("\nNext step (only if sending via Gmail): python generate.py --email")
+    run_all = "--all" in sys.argv
+    if run_all:
+        subprocess.run([sys.executable, str(BASE_DIR / "screenshot_sections.py")], check=True)
+        subprocess.run([sys.executable, str(BASE_DIR / "generate_simple_email.py")], check=True)
+    else:
+        print("\n" + "-" * 70)
+        print("REVIEW the preview above, then run:")
+        print("  1. python screenshot_sections.py     -> section PNGs in output/sections/")
+        print("  2. upload output/sections/*.png      -> see output/sections/UPLOAD_ME.txt")
+        print("  3. python generate_simple_email.py   -> final Gmail/Outlook-safe HTML")
+        print("\n(or 'python import_content.py --all' to skip the review gate)")
+        print("-" * 70)
 
 
 if __name__ == "__main__":

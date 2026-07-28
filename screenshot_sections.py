@@ -26,8 +26,9 @@ email — a flat image can't be partially clickable.
 Usage:
     python screenshot_sections.py
 
-Normally you don't run this by hand — import_content.py calls it automatically
-after refreshing content.json and rendering the HTML.
+Run this once the browser preview from import_content.py has been approved —
+these PNGs are what actually get mailed. Then upload output/sections/*.png to
+the host and run generate_simple_email.py to build the final email.
 """
 
 import json
