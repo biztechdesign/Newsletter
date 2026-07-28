@@ -853,8 +853,21 @@ def main():
     sys.stdout.reconfigure(line_buffering=True)
 
     # ── Step 1: Newsletter content ────────────────────────────────────────
-    print("Downloading Newsletter Content sheet...")
-    content_wb = download_xlsx(CONTENT_SHEET_ID)
+    # --sheet=<file.xlsx> drives the run from a local Excel file instead of the
+    # shared Google Sheet — useful when you only have view access to the sheet,
+    # or want to prepare a month without touching the live copy.
+    local_sheet = next(
+        (a.split("=", 1)[1] for a in sys.argv if a.startswith("--sheet=")), None
+    )
+    if local_sheet:
+        sheet_path = Path(local_sheet)
+        if not sheet_path.is_file():
+            raise SystemExit(f"--sheet file not found: {sheet_path}")
+        print(f"Reading Newsletter Content from local file: {sheet_path}")
+        content_wb = openpyxl.load_workbook(sheet_path)
+    else:
+        print("Downloading Newsletter Content sheet...")
+        content_wb = download_xlsx(CONTENT_SHEET_ID)
     data = parse_content_sheet(content_wb)
     print(f"  month={data['month']}, year={data['year']}")
     print(f"  Awards : {[a['title'] for a in data['rewards']['awards']]}")
