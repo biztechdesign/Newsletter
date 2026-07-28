@@ -29,6 +29,7 @@ Update the SHEET IDs at the top when working on a new month.
 
 import io
 import json
+import os
 import re
 import subprocess
 import sys
@@ -53,6 +54,10 @@ OUTPUT   = BASE_DIR / "content.json"
 # main() once the sheet's month/year are known; images found here take
 # priority over the GitHub folders listed in the sheet. See local_mirror().
 ROW_DATA_DIR: Path | None = None
+
+# Cached by github_token(): "" means "looked and found nothing", None means
+# "not looked yet".
+_GITHUB_TOKEN: str | None = None
 
 # Footer is static — update here if it ever changes
 FOOTER = {
@@ -143,6 +148,34 @@ def parse_github_url(url: str) -> dict | None:
     return None
 
 
+def github_token() -> str:
+    """
+    A GitHub token, if one can be found, cached after the first lookup.
+
+    Unauthenticated API calls are capped at 60/hour and each run makes roughly
+    a dozen folder listings, so a few runs in a row start returning 403 and
+    whole sections silently vanish from the newsletter. An authenticated call
+    gets 5000/hour. Checked in order: GITHUB_TOKEN, GH_TOKEN, then the GitHub
+    CLI if it's installed and logged in.
+    """
+    global _GITHUB_TOKEN
+    if _GITHUB_TOKEN is not None:
+        return _GITHUB_TOKEN
+
+    _GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN") or ""
+    if not _GITHUB_TOKEN:
+        try:
+            result = subprocess.run(
+                ["gh", "auth", "token"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if result.returncode == 0:
+                _GITHUB_TOKEN = result.stdout.strip()
+        except (OSError, subprocess.SubprocessError):
+            pass  # gh not installed or not logged in — carry on unauthenticated
+    return _GITHUB_TOKEN
+
+
 def local_mirror(path: str) -> Path | None:
     """
     Map a repo image path ('images/awards') onto this month's local Row Data
@@ -176,12 +209,19 @@ def list_github_folder(owner: str, repo: str, branch: str, path: str) -> list[di
         ]
         if result:
             return sorted(result, key=lambda x: x["name"])
+        # Say so loudly: falling back means this month's newsletter is about to
+        # show LAST month's photos, which looks fine and is completely wrong.
+        print(f"  NOTE: '{local.relative_to(BASE_DIR)}' is empty - using GitHub images instead.")
 
     api = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={branch}"
-    req = urllib.request.Request(api, headers={
+    headers = {
         "User-Agent": "Mozilla/5.0",
         "Accept": "application/vnd.github.v3+json",
-    })
+    }
+    token = github_token()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    req = urllib.request.Request(api, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             files = json.loads(resp.read())
