@@ -279,6 +279,22 @@ def resolve_folder_urls(raw: str) -> list[str]:
     return [single] if single else []
 
 
+def split_name_parts(stem: str) -> list[str]:
+    """
+    Split a filename stem into its fields, e.g. 'Name--Designation' or
+    '01--Award Title--Name--Designation'.
+
+    A plain hyphen padded with spaces ('Name - Designation') is accepted too,
+    since that's what people type naturally. The surrounding spaces are
+    required, so hyphenated names like 'Anne-Marie' are never split apart.
+    """
+    if "--" in stem:
+        return [p.strip() for p in stem.split("--")]
+    if " - " in stem:
+        return [p.strip() for p in stem.split(" - ")]
+    return [stem.strip()]
+
+
 def parse_awards_from_github_folder(folder_url: str) -> list[dict]:
     """
     List a GitHub folder, parse filenames as 'Title--Name--Designation.ext',
@@ -292,10 +308,12 @@ def parse_awards_from_github_folder(folder_url: str) -> list[dict]:
     award_map: dict[str, dict] = {}
     award_order: list[str] = []
     for f in files:
-        parts = [p.strip() for p in f["stem"].split("--")]
+        parts = split_name_parts(f["stem"])
         if parts and parts[0].isdigit():
             parts = parts[1:]  # strip leading order-number segment, e.g. "01"
         if len(parts) < 2:
+            print(f"  WARNING: skipping award image '{f['name']}' - "
+                  f"expected 'Award Title -- Name -- Designation'")
             continue
         title = parts[0]
         name  = parts[1] if len(parts) > 1 else ""
@@ -318,8 +336,10 @@ def parse_new_joinees_from_github_folder(folder_url: str) -> list[dict]:
     files = list_github_folder(info["owner"], info["repo"], info["branch"], info["path"])
     people = []
     for f in files:
-        parts = [p.strip() for p in f["stem"].split("--")]
+        parts = split_name_parts(f["stem"])
         if len(parts) < 2:
+            print(f"  WARNING: skipping new joinee image '{f['name']}' - "
+                  f"expected 'Name -- Designation'")
             continue
         people.append({"name": parts[0], "designation": parts[1], "image_url": f["url"]})
     return people

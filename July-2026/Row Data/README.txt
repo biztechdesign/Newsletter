@@ -13,16 +13,27 @@ scripts will look for a folder named after whatever month the sheet says.
 FILENAME MATTERS IN THESE THREE
 -------------------------------
 The text shown in the newsletter is read from the filename — there is no sheet
-row for these people. Use "--" (two dashes) as the separator.
+row for these people.
 
-awards/          01--Award Title--Person Name--Designation.jpg
+Separator: either "--" (two dashes) or " - " (hyphen WITH a space either
+side). Both work, so all of these are fine:
+
+    Arpi Shah - Sales Automation Analyst.jpeg
+    Arpi Shah--Sales Automation Analyst.jpeg
+
+The spaces around a single hyphen are what matters — they are how a
+hyphenated name like "Anne-Marie" is kept intact instead of being split.
+A file with no separator at all is skipped, and the run prints a WARNING
+naming the file so it never disappears silently.
+
+awards/          01 - Award Title - Person Name - Designation.jpg
                  Leading number = display order, and is not shown.
                  Repeat the same Award Title across files to group several
                  people under one award, e.g.
-                   04--Team Spirit Award--Pooja Dahale--Sr. Odoo Consultant.png
-                   04--Team Spirit Award--Uttam Jain--Lead Odoo Consultant.png
+                   04 - Team Spirit Award - Pooja Dahale - Sr. Odoo Consultant.png
+                   04 - Team Spirit Award - Uttam Jain - Lead Odoo Consultant.png
 
-new_joinee/      Person Name--Designation.png
+new_joinee/      Person Name - Designation.png
 
 events/event1/   Event photo files (any names). event1 / event2 / event3 map
 events/event2/   to the three HR Insider events; their TITLES come from the
