@@ -16,9 +16,13 @@ section images are cut. The full monthly flow is:
 
     1. python import_content.py         → content.json + preview HTML
        ...review the preview, fix the sheet/images and re-run until approved
-    2. python screenshot_sections.py    → one PNG per section in output/sections/
-    3. upload output/sections/*.png     → see output/sections/UPLOAD_ME.txt
+    2. python screenshot_sections.py    → PNGs in "<Month>-<Year>/Section wise images"
+    3. upload those PNGs                → see UPLOAD_ME.txt in that same folder
     4. python generate_simple_email.py  → final Gmail/Outlook-safe email HTML
+
+This month's source photos go in "<Month>-<Year>/Row Data", mirroring the
+images/ folder layout (awards/, new_joinee/, events/event1/, …). Anything
+found there wins over the GitHub folder listed in the sheet.
 
 Update the SHEET IDs at the top when working on a new month.
 """
@@ -44,6 +48,11 @@ ANNIV_SHEET_ID   = "19m9QWBhOqLh9pZT-u4eoaPkN9XS3hu69"
 
 BASE_DIR = Path(__file__).parent
 OUTPUT   = BASE_DIR / "content.json"
+
+# This month's local source-image folder, e.g. "July-2026/Row Data". Set by
+# main() once the sheet's month/year are known; images found here take
+# priority over the GitHub folders listed in the sheet. See local_mirror().
+ROW_DATA_DIR: Path | None = None
 
 # Footer is static — update here if it ever changes
 FOOTER = {
@@ -134,11 +143,40 @@ def parse_github_url(url: str) -> dict | None:
     return None
 
 
+def local_mirror(path: str) -> Path | None:
+    """
+    Map a repo image path ('images/awards') onto this month's local Row Data
+    folder ('<Month>-<Year>/Row Data/awards') and return it if it exists.
+
+    This lets a month's photos be dropped straight into the local folder
+    instead of being pushed to GitHub first: the section images are flattened
+    to PNGs before mailing, so the source photos never need a public URL.
+    Anything missing locally still falls through to the GitHub folder in the
+    sheet, so a half-filled Row Data folder degrades gracefully.
+    """
+    if ROW_DATA_DIR is None:
+        return None
+    rel = path[len("images/"):] if path.startswith("images/") else path
+    candidate = ROW_DATA_DIR / rel
+    return candidate if candidate.exists() else None
+
+
 def list_github_folder(owner: str, repo: str, branch: str, path: str) -> list[dict]:
     """
-    List image files in a GitHub repo folder via the API.
-    Returns [{name, stem, url}] sorted by name, where url is the GitHub Pages URL.
+    List image files in a folder — this month's local Row Data folder if it has
+    one, otherwise the GitHub repo folder via the API.
+    Returns [{name, stem, url}] sorted by name.
     """
+    local = local_mirror(path)
+    if local is not None and local.is_dir():
+        result = [
+            {"name": p.name, "stem": p.stem, "url": p.resolve().as_uri()}
+            for p in local.iterdir()
+            if p.is_file() and p.suffix.lower() in IMAGE_EXTS
+        ]
+        if result:
+            return sorted(result, key=lambda x: x["name"])
+
     api = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={branch}"
     req = urllib.request.Request(api, headers={
         "User-Agent": "Mozilla/5.0",
@@ -174,6 +212,9 @@ def resolve_single_url(raw: str) -> str:
             files = list_github_folder(info["owner"], info["repo"], info["branch"], info["path"])
             return files[0]["url"] if files else ""
         else:
+            local = local_mirror(info["path"])
+            if local is not None and local.is_file():
+                return local.resolve().as_uri()
             return f"https://{info['owner']}.github.io/{info['repo']}/{info['path']}"
     if "drive.google.com" in raw:
         fid = drive_file_id(raw)
@@ -868,8 +909,16 @@ def main():
     else:
         print("  No anniversary data found.")
 
-    # ── Step 3: Resolve all image URLs (GitHub folders → direct URLs) ───
+    # ── Step 3: Resolve all image URLs (local Row Data → GitHub folders) ───
+    global ROW_DATA_DIR
+    ROW_DATA_DIR = BASE_DIR / f"{data['month']}-{data['year']}" / "Row Data"
     print("\nResolving images...")
+    if ROW_DATA_DIR.is_dir():
+        have = sorted(p.name for p in ROW_DATA_DIR.iterdir() if p.is_dir())
+        print(f"  Local source folder: {ROW_DATA_DIR}")
+        print(f"    {len(have)} subfolder(s): {', '.join(have) if have else '(empty - falling back to GitHub)'}")
+    else:
+        print(f"  No local folder at {ROW_DATA_DIR} - using the GitHub folders from the sheet.")
     resolve_all_images(data)
 
     # ── Step 4: Write content.json ────────────────────────────────────────
@@ -890,8 +939,8 @@ def main():
     else:
         print("\n" + "-" * 70)
         print("REVIEW the preview above, then run:")
-        print("  1. python screenshot_sections.py     -> section PNGs in output/sections/")
-        print("  2. upload output/sections/*.png      -> see output/sections/UPLOAD_ME.txt")
+        print(f"  1. python screenshot_sections.py     -> PNGs in {data['month']}-{data['year']}/Section wise images")
+        print("  2. upload those PNGs                 -> see UPLOAD_ME.txt in that folder")
         print("  3. python generate_simple_email.py   -> final Gmail/Outlook-safe HTML")
         print("\n(or 'python import_content.py --all' to skip the review gate)")
         print("-" * 70)

@@ -2,7 +2,8 @@
 generate_simple_email.py
 =========================
 Builds the final Gmail- and Outlook-safe newsletter email out of the flat
-per-section PNGs in output/sections/ (produced by screenshot_sections.py),
+per-section PNGs in "<Month>-<Year>/Section wise images" (produced by
+screenshot_sections.py),
 instead of the fully CSS-styled template_email.html — which renders correctly
 in Gmail but breaks in Outlook desktop (gradients, border-radius, absolute
 positioning, etc. are all unsupported there). Flattening each section to an
@@ -14,11 +15,11 @@ can't do for just part of itself).
 The markup follows the approved reference layout (Roboto, 800px tables,
 .mobile_table responsive rules, teal footer) — see template_simple_email.html.
 
-IMPORTANT: this reads image dimensions from the LOCAL files in
-output/sections/, but writes URLs pointing at wherever you've uploaded those
-*same* files on your own server (see HOSTED_SECTIONS_BASE below) — you must
-upload the current output/sections/*.png files there yourself before sending,
-this script does not do that upload.
+IMPORTANT: this reads image dimensions from the LOCAL PNGs, but writes URLs
+pointing at wherever you've uploaded those *same* files on your own server
+(see HOSTED_SECTIONS_BASE below) — you must upload them there yourself before
+sending, this script does not do that upload. The exact file list is written
+to UPLOAD_ME.txt next to the PNGs.
 
 Each issue gets its OWN folder on the server, e.g.
     https://w.indiaondesk.com/biztech-insider/January_2026/
@@ -39,7 +40,14 @@ from PIL import Image
 BASE_DIR = Path(__file__).parent
 CONTENT_JSON = BASE_DIR / "content.json"
 OUTPUT_DIR = BASE_DIR / "output"
-SECTIONS_DIR = OUTPUT_DIR / "sections"
+
+# Per-issue folder written by screenshot_sections.py, e.g.
+# "July-2026/Section wise images".
+SECTIONS_SUBDIR = "Section wise images"
+
+
+def sections_dir(month: str, year: str) -> Path:
+    return BASE_DIR / f"{month}-{year}" / SECTIONS_SUBDIR
 
 # Where you upload output/sections/*.png each month. The {month}/{year}
 # placeholders give every issue its own folder, so re-uploading next month
@@ -106,10 +114,10 @@ def hosted_base(month: str, year: str) -> str:
     return HOSTED_SECTIONS_BASE.format(month=month, year=year).rstrip("/")
 
 
-def resolve_sections(pairs, base_url):
+def resolve_sections(pairs, base_url, sec_dir):
     resolved = []
     for stem, alt in pairs:
-        path = SECTIONS_DIR / f"{stem}.png"
+        path = sec_dir / f"{stem}.png"
         if not path.exists():
             continue
         _w, h = png_size(path)
@@ -121,13 +129,13 @@ def resolve_sections(pairs, base_url):
     return resolved
 
 
-def resolve_marketing(base_url, data):
-    bg_path = SECTIONS_DIR / "Marketing-Highlights.png"
+def resolve_marketing(base_url, data, sec_dir):
+    bg_path = sec_dir / "Marketing-Highlights.png"
     if not bg_path.exists():
         return None
     _w, bg_h = png_size(bg_path)
 
-    links_path = SECTIONS_DIR / "marketing_links.json"
+    links_path = sec_dir / "marketing_links.json"
     links = json.loads(links_path.read_text(encoding="utf-8")) if links_path.exists() else []
     href_by_name = {entry["image"]: entry["href"] for entry in links}
 
@@ -137,7 +145,7 @@ def resolve_marketing(base_url, data):
     title_by_url = {p.get("url", ""): p.get("title", "") for p in posts}
 
     blogs = []
-    blog_paths = sorted(SECTIONS_DIR.glob("blog-*.png"), key=lambda p: p.name)
+    blog_paths = sorted(sec_dir.glob("blog-*.png"), key=lambda p: p.name)
     for i, path in enumerate(blog_paths):
         w, h = png_size(path)
         href = href_by_name.get(path.name, "#")
@@ -164,10 +172,15 @@ def main():
     data = json.loads(CONTENT_JSON.read_text(encoding="utf-8"))
     month, year = data["month"], data["year"]
     base_url = hosted_base(month, year)
+    sec_dir = sections_dir(month, year)
+    if not sec_dir.is_dir():
+        raise SystemExit(
+            f"{sec_dir} not found — run 'python screenshot_sections.py' first to cut the section images."
+        )
 
-    sections_before = resolve_sections(SECTIONS_BEFORE_MARKETING, base_url)
-    sections_after = resolve_sections(SECTIONS_AFTER_MARKETING, base_url)
-    marketing = resolve_marketing(base_url, data)
+    sections_before = resolve_sections(SECTIONS_BEFORE_MARKETING, base_url, sec_dir)
+    sections_after = resolve_sections(SECTIONS_AFTER_MARKETING, base_url, sec_dir)
+    marketing = resolve_marketing(base_url, data, sec_dir)
 
     env = Environment(loader=FileSystemLoader(str(BASE_DIR)))
     template = env.get_template("template_simple_email.html")
@@ -193,12 +206,12 @@ def main():
     out_file.write_text(html, encoding="utf-8")
 
     all_stems = [s for s, _ in SECTIONS_BEFORE_MARKETING] + [s for s, _ in SECTIONS_AFTER_MARKETING]
-    included = [s for s in all_stems if (SECTIONS_DIR / f"{s}.png").exists()]
+    included = [s for s in all_stems if (sec_dir / f"{s}.png").exists()]
     skipped = [s for s in all_stems if s not in included]
 
-    # Everything in output/sections/ has to exist at base_url before sending.
-    upload_files = sorted(p.name for p in SECTIONS_DIR.glob("*.png"))
-    upload_note = SECTIONS_DIR / "UPLOAD_ME.txt"
+    # Every PNG in the section folder has to exist at base_url before sending.
+    upload_files = sorted(p.name for p in sec_dir.glob("*.png"))
+    upload_note = sec_dir / "UPLOAD_ME.txt"
     upload_note.write_text(
         f"Upload these {len(upload_files)} files to:\n{base_url}/\n\n"
         + "\n".join(upload_files)
@@ -212,7 +225,7 @@ def main():
         missing = skipped + ([] if marketing else ["Marketing Highlights"])
         print(f"  Sections skipped (no PNG found): {' | '.join(missing)}")
     print(f"  Image host: {base_url}/")
-    print(f"  UPLOAD {len(upload_files)} PNG(s) from output/sections/ to that folder before sending.")
+    print(f"  UPLOAD {len(upload_files)} PNG(s) from '{sec_dir}' to that folder before sending.")
     print(f"  File list written to: {upload_note}")
     print(f"  Open in browser: file:///{out_file.as_posix()}\n")
 

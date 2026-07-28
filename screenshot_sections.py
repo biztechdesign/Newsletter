@@ -2,7 +2,8 @@
 screenshot_sections.py
 =======================
 Renders the browser-preview newsletter HTML (output/newsletter_<Month>_<Year>.html)
-and saves one PNG per section into output/sections/.
+and saves one 2x PNG per section into "<Month>-<Year>/Section wise images",
+alongside that month's "Row Data" source-photo folder.
 
 Reads month/year from content.json, so it always targets the current month's
 output file. Skips sections that are absent or hidden this month (e.g. an
@@ -27,8 +28,8 @@ Usage:
     python screenshot_sections.py
 
 Run this once the browser preview from import_content.py has been approved —
-these PNGs are what actually get mailed. Then upload output/sections/*.png to
-the host and run generate_simple_email.py to build the final email.
+these PNGs are what actually get mailed. Then upload them to the host and run
+generate_simple_email.py to build the final email.
 """
 
 import json
@@ -39,7 +40,14 @@ from playwright.sync_api import sync_playwright
 BASE_DIR = Path(__file__).parent
 CONTENT_JSON = BASE_DIR / "content.json"
 OUTPUT_DIR = BASE_DIR / "output"
-SECTIONS_DIR = OUTPUT_DIR / "sections"
+
+# Per-issue output folder, e.g. "July-2026/Section wise images", alongside the
+# "Row Data" folder holding that month's source photos.
+SECTIONS_SUBDIR = "Section wise images"
+
+
+def sections_dir(month: str, year: str) -> Path:
+    return BASE_DIR / f"{month}-{year}" / SECTIONS_SUBDIR
 
 # (output filename, CSS selector in template.html) — Header/Footer excluded,
 # Marketing Highlights handled separately by save_marketing_highlights().
@@ -117,8 +125,9 @@ def main():
             f"{html_path} not found — run 'python generate.py' first to render the browser-preview HTML."
         )
 
-    SECTIONS_DIR.mkdir(parents=True, exist_ok=True)
-    for stale in SECTIONS_DIR.glob("*.png"):
+    out_dir = sections_dir(month, year)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for stale in out_dir.glob("*.png"):
         stale.unlink()
 
     with sync_playwright() as p:
@@ -138,18 +147,18 @@ def main():
             if el is None or not el.is_visible():
                 skipped.append(name)
                 continue
-            out_path = SECTIONS_DIR / f"{name}.png"
+            out_path = out_dir / f"{name}.png"
             el.screenshot(path=str(out_path), type="png")
             saved.append(out_path)
 
-        marketing_result = save_marketing_highlights(page, SECTIONS_DIR)
+        marketing_result = save_marketing_highlights(page, out_dir)
         if marketing_result is None:
             skipped.append("Marketing-Highlights")
         else:
             bg_path, blog_images = marketing_result
             saved.append(bg_path)
             saved.extend(p for p, _href in blog_images)
-            links_path = SECTIONS_DIR / "marketing_links.json"
+            links_path = out_dir / "marketing_links.json"
             links_path.write_text(
                 json.dumps(
                     [{"image": p.name, "href": href} for p, href in blog_images],
@@ -160,7 +169,7 @@ def main():
 
         browser.close()
 
-    print(f"Section images -> {SECTIONS_DIR}")
+    print(f"Section images -> {out_dir}")
     print(f"  Saved ({len(saved)}): {', '.join(p.stem for p in saved)}")
     if skipped:
         print(f"  Skipped, no content this month ({len(skipped)}): {', '.join(skipped)}")
