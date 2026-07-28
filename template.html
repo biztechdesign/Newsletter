@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biztech Newsletter — {{ month }} {{ year }}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #f0f0f0;
+    font-family: 'Montserrat', Arial, sans-serif;
+    color: #222;
+  }
+
+  /* ── Newsletter container ───────────────────────────────────── */
+  .nl-wrap {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    /* Reset the outer <td align="center"> wrapper's inherited text-align
+       (its job is only to center this 800px block on the page, via
+       margin:0 auto above — without this, every paragraph inside inherits
+       centered text instead of its own normal left alignment). */
+    text-align: left;
+  }
+
+  /* ── Shared helpers ─────────────────────────────────────────── */
+  .teal  { color: #34AFBF; }
+  .bold  { font-weight: 700; }
+
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 0px;
+  }
+  .section-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 34px;
+    font-weight: 800;
+    color: #1a1a1a;
+    line-height: 1.15;
+  }
+  .section-title span { color: #34AFBF; }
+  .section-icon img  { height: auto; }
+
+  .sub-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 24px;
+  }
+  .sub-divider::before,
+  .sub-divider::after {
+    content: '';
+    width: 40px;
+    height: 2px;
+    background: #333333;
+  }
+
+  /* ── 1. HEADER ──────────────────────────────────────────────── */
+  .nl-header {
+    background: #fff;
+    padding: 24px 48px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nl-header img.logo { height: auto; width: auto; }
+  .nl-month {
+    font-family: 'Poppins', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: #1a1a1a;
+    letter-spacing: -0.5px;
+  }
+  .nl-month span { color: #34AFBF; }
+  .nl-separator {
+    height: 3px;
+    background: #34AFBF;
+    border-radius: 2px;
+    margin: 0;
+  }
+
+  /* ── 2. CEO'S DESK ──────────────────────────────────────────── */
+  .sec-ceo {
+    background: linear-gradient(180deg, #EEFAFF 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .ceo-body {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    margin-top: 28px;
+  }
+  .ceo-profile {
+    text-align: center;
+    flex-shrink: 0;
+    width: 160px;
+  }
+  .ceo-photo-wrap {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid #34AFBF;
+    margin: 0 auto 12px;
+  }
+  .ceo-photo-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .ceo-name  { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #1a1a1a; }
+  .ceo-role  { font-size: 14px; color: #555; margin-top: 4px; }
+  .ceo-text  {
+    font-size: 16px;
+    line-height: 1.75;
+    color: #333;
+    flex: 1;
+    padding-top: 6px;
+  }
+
+  /* ── 3. CAMPAIGN BANNER ─────────────────────────────────────── */
+  .sec-campaign { line-height: 0; }
+  .sec-campaign img {
+    width: 100%;
+    display: block;
+  }
+
+  /* ── 3b. NEWLY ADDED CUSTOMERS ──────────────────────────────── */
+  .sec-new-customers {
+    background: linear-gradient(180deg, #F0FBFC 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .new-customers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 28px;
+  }
+  .customer-card {
+    box-sizing: border-box;
+    text-align: center;
+    border: 1px solid #E5E9EC;
+    border-radius: 4px;
+    background: #fff;
+    padding: 20px;
+  }
+  .customer-card img {
+    max-width: 100%;
+    max-height: 60px;
+    display: inline-block;
+  }
+
+  /* ── 4. DELIVERY INSIGHTS ───────────────────────────────────── */
+  .sec-delivery {
+    background: linear-gradient(180deg, #FFF2F6 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .delivery-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 28px;
+  }
+  .delivery-row {
+    display: flex;
+    gap: 36px;
+    align-items: center;
+  }
+  .delivery-logo img {
+    max-width: 180px;
+    max-height: 80px;
+    object-fit: contain;
+  }
+  .delivery-text {
+    font-size: 16px;
+    line-height: 1.75;
+    color: #333;
+    font-weight: 500;
+    flex: 1;
+  }
+
+  /* ── 5. ACKNOWLEDGING EXCELLENCE ───────────────────────────── */
+  .sec-excellence {
+    background: linear-gradient(180deg, #FFFAEE 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .excellence-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 28px;
+  }
+  .excellence-card {
+    background: linear-gradient(135deg, #FFF1D6 0%, #ffffff 55%);
+    border-radius: 6px;
+    padding: 28px 32px;
+  }
+  .excellence-client-logo {
+    display: inline-flex;
+    align-items: center;
+    background: #fff;
+    padding: 8px 16px;
+    margin-bottom: 18px;
+  }
+  .excellence-client-logo img {
+    max-height: 48px;
+    max-width: 160px;
+    object-fit: contain;
+    display: block;
+  }
+  .excellence-client-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+  }
+  .excellence-quote {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #444;
+    font-weight: 500;
+    white-space: pre-line;
+  }
+
+  /* ── 6. HR INSIDER (wellness + events unified gradient block) ── */
+  .sec-hr {
+    background: linear-gradient(180deg, #F2EFFF 0%, #ffffff 100%);
+    padding: 48px 0;
+  }
+  .hr-inner-pad { padding: 0 48px; }
+  .hr-event-gap { margin-bottom: 32px; }
+  .hr-wellness-wrap {
+    line-height: 0;
+    margin-top: 24px;
+    margin-bottom: 32px; /* matches .hr-event-gap, so the gap before the first
+                            event's divider equals the gap between events */
+  }
+  .hr-wellness-wrap img { width: 100%; display: block; }
+
+  .events-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    margin-top: 24px;
+  }
+  .ev-img {
+    grid-column: span 2;
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+  }
+  /* 1 image alone in last row → centered at normal card width (not stretched full-width,
+     which would force an extreme wide crop on square/portrait source photos) */
+  .ev-img:nth-last-child(1):nth-child(3n + 1) {
+    grid-column: 3 / span 2;
+  }
+  /* 2 images in last row → equal halves, same row height */
+  .ev-img:nth-last-child(2):nth-child(3n + 1),
+  .ev-img:nth-last-child(1):nth-child(3n + 2) {
+    grid-column: span 3;
+  }
+  @media (max-width: 768px) {
+    .events-grid { grid-template-columns: repeat(2, 1fr); }
+    .ev-img { grid-column: span 1 !important; height: 140px; }
+    .ev-img:nth-last-child(1):nth-child(2n + 1) { grid-column: span 2 !important; }
+  }
+  @media (max-width: 480px) {
+    .events-grid { grid-template-columns: 1fr; }
+    .ev-img { grid-column: span 1 !important; height: 200px; }
+  }
+
+  /* ── 7. REWARDS & RECOGNITION ───────────────────────────────── */
+  .sec-rewards {
+    background: linear-gradient(180deg, #F4FFFC 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .rewards-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 28px;
+  }
+  .rewards-row {
+    display: flex;
+    gap: 4px;
+  }
+  .award-card {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .award-card-header {
+    background: #34AFBF;
+    color: #fff;
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px;
+    letter-spacing: 0.3px;
+  }
+  .award-card-photo {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+  }
+  .award-card-footer {
+    background: #DDEDFF;
+    text-align: center;
+    padding: 14px 10px;
+  }
+  .award-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1E528D;
+  }
+  .award-role {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1E528D;
+    margin-top: 3px;
+  }
+  .award-duo {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+  .award-duo .award-card-photo { aspect-ratio: 4 / 3; }
+  .award-duo-footer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+
+  /* ── 7b. EMPLOYEE CERTIFICATIONS ────────────────────────────── */
+  .sec-certifications {
+    background: linear-gradient(180deg, #F0FBFC 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .certifications-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 28px;
+  }
+  .certification-card {
+    width: 320px;
+    box-sizing: border-box;
+    border: 1px solid #E5E9EC;
+    border-radius: 10px;
+    background: #fff;
+    padding: 4px;
+  }
+  .certification-card img {
+    width: 100%;
+    display: block;
+    border-radius: 4px;
+  }
+
+  /* ── 8. WORK ANNIVERSARIES ──────────────────────────────────── */
+  .sec-anniversaries {
+    background: linear-gradient(180deg, #FFF9EB 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .anniv-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+    margin-top: 36px;
+  }
+  .anniv-card {
+    grid-column: span 2; /* default: 3 per row */
+    background: #fff;
+    border: 1.5px solid #FFF2D9;
+    border-radius: 10px;
+    padding: 18px 22px;
+    position: relative;
+    overflow: visible;
+  }
+  /* Max 3 per row; any leftover row (1 or 2 cards) fills the width evenly */
+  .anniv-card:nth-last-child(1):nth-child(3n + 1) { grid-column: span 6; }
+  .anniv-card:nth-last-child(2):nth-child(3n + 1),
+  .anniv-card:nth-last-child(1):nth-child(3n + 2) { grid-column: span 3; }
+
+  /* Balloons ─────────────────────────── */
+  .balloon-img {
+    position: absolute;
+    width: 38px;
+    height: auto;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .anniv-years {
+    font-family: 'Poppins', sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: #34AFBF;
+    line-height: 1;
+  }
+  .anniv-years-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #34AFBF;
+    margin-left: 4px;
+  }
+  .anniv-year-label-text {
+    font-size: 13px;
+    color: #888;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .anniv-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+  .balloon {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+  }
+
+  /* ── 8b. NEW ADDITIONS ──────────────────────────────────────── */
+  .sec-new-joinees {
+    background: linear-gradient(180deg, #FFF0F5 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .new-joinees-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 28px;
+    margin-top: 28px;
+  }
+  .nj-card {
+    width: 160px;
+    text-align: center;
+  }
+  .nj-photo {
+    width: 125px;
+    height: 125px;
+    box-sizing: border-box;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 0;
+  }
+  .nj-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .nj-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+  .nj-role {
+    font-size: 13px;
+    color: #555;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* ── 9. NEW OPENINGS ────────────────────────────────────────── */
+  .sec-openings {
+    background: linear-gradient(180deg, #F2EFFF 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .openings-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    margin-top: 28px;
+  }
+  .openings-table-wrap { flex: 1; }
+  .openings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .openings-table thead th {
+    background: transparent;
+    color: #1a1a1a;
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 2px solid rgba(108,99,255,0.2);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .openings-table tbody tr { background-color: #F1EEFF; border-bottom: 1px solid #fff; }
+  .openings-table tbody td {
+    padding: 16px 14px;
+    color: #1a1a1a;
+    font-weight: 500;
+    background: transparent;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .openings-table tbody tr:last-child td { border-bottom: none; }
+  .openings-table tbody tr td:first-child { font-weight: 700; }
+  .sec-openings .btn-view-all {
+    background: #6C63FF;
+    width: 130px;
+    text-align: center;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  .openings-qr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 130px;
+  }
+  .openings-qr img { width: 130px; height: 130px; object-fit: contain; }
+  .btn-view-all {
+    display: inline-block;
+    background: #EC9B00;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 22px;
+    border-radius: 6px;
+    text-decoration: none;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── 10. MARKETING HIGHLIGHTS ───────────────────────────────── */
+  .sec-marketing {
+    background: linear-gradient(180deg, #FFFBF2 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .blog-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 24px;
+  }
+  .blog-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #eeeeee;
+  }
+  .blog-card img {
+    width: 100%;
+    /* Matches the blog thumbnails' actual 3:2 source ratio (2560x1707) — using
+       16:9 here cropped ~16% off the top/bottom, cutting into the graphics'
+       own text near the bottom edge. */
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    display: block;
+  }
+  .blog-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+    line-height: 1.5;
+    padding: 14px;
+    min-height: 95px;
+    box-sizing: border-box;
+  }
+  .blog-view-all {
+    text-align: center;
+    margin-top: 22px;
+  }
+
+  /* ── 10b. UPCOMING EVENT ANNOUNCEMENT ───────────────────────── */
+  .sec-announcements {
+    background: linear-gradient(180deg, #EAF6FF 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .announcements-grid {
+    /* Full-width 2-column grid (matches .new-customers-grid) instead of
+       fixed-330px flex-centered cards — those left ~20px of extra centering
+       space on each side, misaligning the banners' left/right edges against
+       every other 2-column section (e.g. Marketing Highlights' blog cards). */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-top: 15px;
+  }
+  .announcement-card {
+    box-sizing: border-box;
+  }
+  .announcement-card img {
+    width: 100%;
+    display: block;
+  }
+
+  /* ── 11. FOOTER ─────────────────────────────────────────────── */
+  .nl-footer {
+    background: #34AFBF;
+    padding: 36px 48px 32px;
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    font-family: 'Montserrat', Arial, sans-serif;
+  }
+  .footer-left { flex: 1; }
+  .footer-address {
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+    line-height: 1.75;
+    max-width: 340px;
+    letter-spacing: 0.1px;
+  }
+  .footer-divider {
+    width: 1.5px;
+    height: 70px;
+    background: rgba(255,255,255,0.4);
+    flex-shrink: 0;
+  }
+  .footer-contact {
+    flex-shrink: 0;
+  }
+  .footer-contact a {
+    display: block;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    margin-bottom: 10px;
+    letter-spacing: 0.1px;
+  }
+  .footer-social {
+    display: flex;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .social-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+  }
+  .social-icon svg { fill: #fff; width: 16px; height: 16px; }
+</style>
+</head>
+<body>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f0f0f0">
+<tr><td align="center" style="padding:0;">
+<div class="nl-wrap">
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 1. HEADER                                                  -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <header class="nl-header">
+    <img class="logo" src="{{ logo_img }}" alt="Biztech Logo">
+    <div class="nl-month">{{ month }} <span>{{ year }}</span></div>
+  </header>
+  <div class="nl-separator"></div>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 2. FROM CEO'S DESK                                         -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.ceo %}
+  <section class="sec-ceo">
+    <div class="section-header">
+      <h2 class="section-title">From <span>CEO's Desk</span></h2>
+      <div class="section-icon"><img src="{{ icon_ceo }}" alt=""></div>
+    </div>
+    <div class="ceo-body">
+      <div class="ceo-profile">
+        {% if ceo_photo %}
+        <div class="ceo-photo-wrap">
+          <img src="{{ ceo_photo }}" alt="{{ ceo_desk.ceo_name }}">
+        </div>
+        {% endif %}
+        <div class="ceo-name">{{ ceo_desk.ceo_name }}</div>
+        <div class="ceo-role">{{ ceo_desk.ceo_title }}</div>
+      </div>
+      <p class="ceo-text">{{ ceo_desk.message }}</p>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 3. CAMPAIGN BANNER (full-width image, changes each month) -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.campaign %}
+  <section class="sec-campaign">
+    <img src="{{ campaign_banner }}" alt="Campaign Banner">
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 3b. NEWLY ADDED CUSTOMERS                                  -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.new_customers %}
+  <section class="sec-new-customers">
+    <div class="section-header">
+      <h2 class="section-title">Newly <span>Added Customers</span></h2>
+      <div class="section-icon"><img src="{{ icon_customers }}" alt=""></div>
+    </div>
+    <div class="new-customers-grid">
+      {% for customer in new_customers %}
+      <div class="customer-card">
+        <img src="{{ customer.image_url }}" alt="{{ customer.name }}">
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 4. DELIVERY INSIGHTS                                       -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.delivery %}
+  <section class="sec-delivery">
+    <div class="section-header">
+      <h2 class="section-title">Delivery <span>Insights</span></h2>
+      <div class="section-icon"><img src="{{ icon_delivery }}" alt=""></div>
+    </div>
+    <div class="delivery-rows">
+      {% for entry in delivery_insights %}
+      <div class="delivery-row">
+        {% if entry.logo_url %}
+        <div class="delivery-logo">
+          <img src="{{ entry.logo_url }}" alt="Client Logo">
+        </div>
+        {% endif %}
+        <p class="delivery-text">{{ entry.description }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 5. ACKNOWLEDGING EXCELLENCE                                -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.excellence %}
+  <section class="sec-excellence">
+    <div class="section-header">
+      <h2 class="section-title">Acknowledging <span>Excellence</span></h2>
+      <div class="section-icon"><img src="{{ icon_excellence }}" alt=""></div>
+    </div>
+    <div class="excellence-cards">
+      {% for entry in acknowledging_excellence %}
+      <div class="excellence-card">
+        {% if entry.logo_url %}
+        <div class="excellence-client-logo">
+          <img src="{{ entry.logo_url }}" alt="Client Logo">
+        </div>
+        {% endif %}
+        {% if entry.client_label %}
+        <div class="excellence-client-name">{{ entry.client_label }}</div>
+        {% endif %}
+        <div class="excellence-quote">{{ entry.testimonial }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 6. HR INSIDER (wellness banner + events in one gradient)  -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.hr %}
+  <section class="sec-hr">
+    <div class="hr-inner-pad">
+      <div class="section-header">
+        <h2 class="section-title">HR <span>Insider</span></h2>
+        <div class="section-icon"><img src="{{ icon_hr }}" alt=""></div>
+      </div>
+      {% if hr_wellness_banner and hr.wellness_title %}
+      <div class="sub-divider">{{ hr.wellness_title }}</div>
+      {% endif %}
+      {% if hr_wellness_banner %}
+      <div class="hr-wellness-wrap">
+        <img src="{{ hr_wellness_banner }}" alt="Wellness &amp; HR Corner">
+      </div>
+      {% endif %}
+    </div>
+    {% for event in hr.events %}
+    <div class="hr-inner-pad{% if not loop.last %} hr-event-gap{% endif %}">
+      {% if event.title %}
+      <div class="sub-divider">{{ event.title }}</div>
+      {% endif %}
+      <div class="events-grid">
+        {% for photo in event.photos %}
+        <img class="ev-img" src="{{ photo }}" alt="Event Photo">
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 7. REWARDS & RECOGNITION                                   -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.rewards %}
+  <section class="sec-rewards">
+    <div class="section-header">
+      <h2 class="section-title">Rewards &amp; <span>Recognition</span></h2>
+      <div class="section-icon"><img src="{{ icon_rewards }}" alt=""></div>
+    </div>
+
+    <div class="rewards-rows">
+      {% for row in reward_rows %}
+      <div class="rewards-row">
+        {% for entry in row.entries %}
+        {% set award = entry.award %}
+        {% set a_photos = entry.photos %}
+        <div class="award-card">
+          <div class="award-card-header">{{ award.title }}</div>
+          {% if entry.is_duo %}
+            <div class="award-duo">
+              {% for photo in a_photos %}
+              <img class="award-card-photo" src="{{ photo }}" alt="Award Photo">
+              {% endfor %}
+            </div>
+            <div class="award-duo-footer">
+              {% for recipient in award.recipients %}
+              <div class="award-card-footer">
+                <div class="award-name">{{ recipient.name }}</div>
+                <div class="award-role">{{ recipient.designation }}</div>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <img class="award-card-photo" src="{{ a_photos[0] if a_photos else '' }}" alt="{{ award.recipients[0].name }}">
+            <div class="award-card-footer">
+              <div class="award-name">{{ award.recipients[0].name }}</div>
+              <div class="award-role">{{ award.recipients[0].designation }}</div>
+            </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 7b. EMPLOYEE CERTIFICATIONS                                -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.certifications %}
+  <section class="sec-certifications">
+    <div class="section-header">
+      <h2 class="section-title">Employee <span>Certifications</span></h2>
+      <div class="section-icon"><img src="{{ icon_certifications }}" alt=""></div>
+    </div>
+    <div class="certifications-grid">
+      {% for certification in certifications %}
+      <div class="certification-card">
+        <img src="{{ certification.image_url }}" alt="{{ certification.name }}">
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 8. WORK ANNIVERSARIES                                      -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.anniversaries %}
+  <section class="sec-anniversaries">
+    <div class="section-header">
+      <h2 class="section-title">Work <span>Anniversaries</span></h2>
+      <div class="section-icon"><img src="{{ icon_anniversaries }}" alt=""></div>
+    </div>
+    <div class="anniv-grid">
+      {% for group in anniversaries %}
+      <div class="anniv-card">
+        {% if group.balloon %}
+        <img class="balloon-img" src="{{ group.balloon.icon }}" alt="" style="{{ group.balloon.style }}">
+        {% endif %}
+        <div>
+          <span class="anniv-years">{{ group.years }}</span>
+          <span class="anniv-years-label">{{ "Year" if group.years == 1 else "Years" }}</span>
+        </div>
+        <div class="anniv-name">
+          {% for name in group.names %}{{ name }}{% if not loop.last %}<br>{% endif %}{% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 8b. NEW ADDITIONS                                          -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.new_joinees %}
+  <section class="sec-new-joinees">
+    <div class="section-header">
+      <h2 class="section-title">New Addition <span>to the Biztech Family</span></h2>
+      <div class="section-icon"><img src="{{ icon_new_joinees }}" alt=""></div>
+    </div>
+    <div class="new-joinees-grid">
+      {% for person in new_joinees %}
+      <div class="nj-card">
+        <div class="nj-photo">
+          <img src="{{ person.image_url }}" alt="{{ person.name }}">
+        </div>
+        <div class="nj-name">{{ person.name }}</div>
+        <div class="nj-role">{{ person.designation }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 9. NEW OPENINGS                                            -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.openings %}
+  <section class="sec-openings">
+    <div class="section-header">
+      <h2 class="section-title">New <span>Openings</span></h2>
+      <div class="section-icon"><img src="{{ icon_openings }}" alt=""></div>
+    </div>
+    <div class="openings-layout">
+      <div class="openings-table-wrap">
+        <table class="openings-table">
+          <thead>
+            <tr>
+              <th>Position</th>
+              <th>Openings</th>
+              <th>Experience</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for job in new_openings.positions %}
+            <tr>
+              <td>{{ job.title }}</td>
+              <td>{{ job.openings }}</td>
+              <td>{{ job.experience }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="openings-qr">
+        {% if openings_qr_img %}
+        <img src="{{ openings_qr_img }}" alt="QR Code">
+        {% endif %}
+        <a class="btn-view-all" href="{{ new_openings.view_all_url }}">View All</a>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 10. MARKETING HIGHLIGHTS                                   -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.marketing %}
+  <section class="sec-marketing">
+    <div class="section-header">
+      <h2 class="section-title">Marketing <span>Highlights</span></h2>
+      <div class="section-icon"><img src="{{ icon_marketing }}" alt=""></div>
+    </div>
+    <div class="sub-divider">Blog posts</div>
+    <div class="blog-grid">
+      {% for i, post in blog_posts_enum %}
+      <a class="blog-card" href="{{ post.url }}" target="_blank" style="text-decoration:none;">
+        {% if blog_images[i] %}
+        <img src="{{ blog_images[i] }}" alt="{{ post.title }}">
+        {% endif %}
+        <div class="blog-card-title">{{ post.title }}</div>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="blog-view-all">
+      <a class="btn-view-all" href="{{ marketing.view_all_url }}">View All</a>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 10b. UPCOMING EVENT ANNOUNCEMENT                           -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.announcements %}
+  <section class="sec-announcements">
+    <div class="section-header">
+      <h2 class="section-title">Upcoming Event <span>Announcement</span></h2>
+      <div class="section-icon"><img src="{{ icon_events }}" alt=""></div>
+    </div>
+    <div class="announcements-grid">
+      {% for announcement in announcements %}
+      <div class="announcement-card">
+        <img src="{{ announcement.image_url }}" alt="{{ announcement.name }}">
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 11. FOOTER                                                 -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <footer class="nl-footer">
+    <div class="footer-left">
+      <div class="footer-address">{{ footer.address }}</div>
+      <div class="footer-social">
+        <!-- LinkedIn -->
+        <a class="social-icon" href="{{ footer.social.linkedin }}" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </a>
+        <!-- Facebook -->
+        <a class="social-icon" href="{{ footer.social.facebook }}" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </a>
+        <!-- YouTube -->
+        <a class="social-icon" href="{{ footer.social.youtube }}" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M23.495 6.205a3.007 3.007 0 00-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 00.527 6.205a31.247 31.247 0 00-.522 5.805 31.247 31.247 0 00.522 5.783 3.007 3.007 0 002.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 002.088-2.088 31.247 31.247 0 00.5-5.783 31.247 31.247 0 00-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+        </a>
+        <!-- Instagram -->
+        <a class="social-icon" href="{{ footer.social.instagram }}" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        </a>
+        <!-- X / Twitter -->
+        <a class="social-icon" href="{{ footer.social.twitter }}" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <!-- Dribbble -->
+        <a class="social-icon" href="{{ footer.social.dribbble }}" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M12 24C5.385 24 0 18.615 0 12S5.385 0 12 0s12 5.385 12 12-5.385 12-12 12zm10.12-10.358c-.35-.11-3.17-.953-6.384-.438 1.34 3.684 1.887 6.684 1.992 7.308a10.507 10.507 0 004.395-6.87zm-6.115 7.808c-.153-.9-.75-4.032-2.19-7.77l-.066.02c-5.79 2.015-7.86 6.025-8.04 6.4a10.461 10.461 0 006.29 2.1c1.37 0 2.685-.275 3.9-.75zm-8.44-2.765c.24-.42 3.01-4.83 8.265-6.485.24-.075.487-.14.73-.195a23.618 23.618 0 00-.53-1.155C10.5 11.754 5.3 11.7 4.93 11.7h-.418c0 1.87.474 3.625 1.303 5.15zm-1.2-7.13H5.2c.41 0 5.09.07 9.12-1.25A88.28 88.28 0 0011.835 3.1C8.5 4.56 5.978 7.115 4.366 10.355zm9.21-8.13c.59 1.27 1.75 3.87 2.675 6.44 2.685-.915 4.86-2.375 6.12-4.13A10.493 10.493 0 0013.575 2.225zm7.64 6.74a11.147 11.147 0 01-5.878 4.028c.178.45.342.91.498 1.367.06.18.12.36.178.536 3.47-.435 6.917.268 7.224.338-.025-2.298-.777-4.42-2.02-6.27z"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer-divider"></div>
+    <div class="footer-contact">
+      <a href="mailto:{{ footer.email }}">{{ footer.email }}</a>
+      <a href="tel:{{ footer.phone }}">{{ footer.phone }}</a>
+    </div>
+  </footer>
+
+</div><!-- end .nl-wrap -->
+</td></tr>
+</table>
+</body>
+</html>

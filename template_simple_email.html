@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biztech Newsletter — {{ month }} {{ year }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Montserrat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0; background: #f0f0f0; }
+  /* No blanket "table { margin: 0 auto }" here on purpose — that would also
+     center every *nested* table (e.g. the footer's social-icon row), pulling
+     it away from its intended left alignment. Top-level section tables are
+     centered explicitly via align="center" below instead. */
+  table { border-collapse: collapse; border-spacing: 0; }
+  @media screen and (max-width: 767px) {
+    table.section-table { width: 100% !important; max-width: 100% !important; }
+    img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+<center>
+
+<!-- ══ HEADER (real HTML — logo + month/year, kept simple/Outlook-safe) ══ -->
+<table align="center" width="800" cellpadding="0" cellspacing="0" border="0" class="section-table"
+       style="width:800px;max-width:800px;margin:0 auto;background-color:#ffffff;border-bottom:3px solid #34AFBF;">
+  <tr>
+    <td valign="middle" style="padding:24px 0 20px 48px;">
+      <img src="{{ logo_img }}" alt="Biztech" height="40" style="height:40px;width:auto;display:block;">
+    </td>
+    <td align="right" valign="middle" style="padding:24px 48px 20px 0;">
+      <span style="font-family:'Poppins',Arial,sans-serif;font-size:32px;font-weight:800;color:#1a1a1a;">{{ month }} <span style="color:#34AFBF;">{{ year }}</span></span>
+    </td>
+  </tr>
+</table>
+
+<!-- ══ FLAT SECTION IMAGES (before Marketing Highlights) ══ -->
+{% for section in sections_before_marketing %}
+<table align="center" width="800" cellpadding="0" cellspacing="0" border="0" class="section-table" style="width:800px;max-width:800px;margin:0 auto;">
+  <tr>
+    <td align="center">
+      <img src="{{ section.url }}" alt="{{ section.alt }}" width="800" height="{{ section.height }}" style="display:block;vertical-align:top;width:800px;">
+    </td>
+  </tr>
+</table>
+{% endfor %}
+
+<!-- ══ MARKETING HIGHLIGHTS (background image + clickable blog cards) ══ -->
+{% if marketing %}
+<table align="center" width="800" cellpadding="0" cellspacing="0" border="0" class="section-table" bgcolor="#FFFBF2" style="width:800px;max-width:800px;margin:0 auto;background-color:#FFFBF2;">
+  <tr>
+    <td align="center">
+      <img src="{{ marketing.bg_url }}" alt="Marketing Highlights" width="800" height="{{ marketing.bg_height }}" style="display:block;width:800px;">
+    </td>
+  </tr>
+  <tr>
+    <td bgcolor="#FFFBF2" style="background-color:#FFFBF2;padding:24px 48px 0;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          {% for blog in marketing.blogs %}
+          <td valign="top" width="50%" style="padding:0 {% if not loop.last %}8px{% else %}0{% endif %} 20px {% if not loop.first %}8px{% else %}0{% endif %};">
+            <a href="{{ blog.href }}" target="_blank" style="display:block;">
+              <img src="{{ blog.url }}" alt="" width="100%" height="{{ blog.height }}" style="display:block;width:100%;height:{{ blog.height }}px;">
+            </a>
+          </td>
+          {% endfor %}
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" bgcolor="#FFFBF2" style="background-color:#FFFBF2;padding:0 48px 40px;">
+      <a href="{{ marketing.view_all_url }}" target="_blank" style="display:inline-block;background:#EC9B00;color:#fff;font-size:14px;font-weight:600;padding:12px 32px;text-decoration:none;font-family:'Montserrat',Arial,sans-serif;">View All</a>
+    </td>
+  </tr>
+</table>
+{% endif %}
+
+<!-- ══ FLAT SECTION IMAGES (after Marketing Highlights) ══ -->
+{% for section in sections_after_marketing %}
+<table align="center" width="800" cellpadding="0" cellspacing="0" border="0" class="section-table" style="width:800px;max-width:800px;margin:0 auto;">
+  <tr>
+    <td align="center">
+      <img src="{{ section.url }}" alt="{{ section.alt }}" width="800" height="{{ section.height }}" style="display:block;vertical-align:top;width:800px;">
+    </td>
+  </tr>
+</table>
+{% endfor %}
+
+<!-- ══ FOOTER (real HTML) ══ -->
+<table align="center" width="800" cellpadding="0" cellspacing="0" border="0" class="section-table" style="width:800px;max-width:800px;margin:0 auto;background-color:#34AFBF;">
+  <tr>
+    <td style="padding:28px 48px 24px;font-family:'Montserrat',Arial,sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td width="60%" style="vertical-align:top;color:#fff;padding-right:20px;">
+            <div style="font-size:14px;font-weight:500;line-height:1.75;color:#fff;">{{ footer.address }}</div>
+            <table cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;">
+              <tr>
+                <td style="padding-right:8px;"><a href="{{ footer.social.linkedin }}"  target="_blank"><img src="{{ icon_social_linkedin }}"  width="28" height="28" alt="LinkedIn"  style="display:block;"></a></td>
+                <td style="padding-right:8px;"><a href="{{ footer.social.facebook }}"  target="_blank"><img src="{{ icon_social_facebook }}"  width="28" height="28" alt="Facebook"  style="display:block;"></a></td>
+                <td style="padding-right:8px;"><a href="{{ footer.social.youtube }}"   target="_blank"><img src="{{ icon_social_youtube }}"   width="28" height="28" alt="YouTube"   style="display:block;"></a></td>
+                <td style="padding-right:8px;"><a href="{{ footer.social.instagram }}" target="_blank"><img src="{{ icon_social_instagram }}" width="28" height="28" alt="Instagram" style="display:block;"></a></td>
+                <td style="padding-right:8px;"><a href="{{ footer.social.twitter }}"   target="_blank"><img src="{{ icon_social_twitter }}"   width="28" height="28" alt="Twitter"   style="display:block;"></a></td>
+                <td><a href="{{ footer.social.dribbble }}"  target="_blank"><img src="{{ icon_social_dribbble }}"  width="28" height="28" alt="Dribbble"  style="display:block;"></a></td>
+              </tr>
+            </table>
+          </td>
+          <td width="40%" style="vertical-align:top;padding-left:20px;border-left:2px solid #5DC4CF;">
+            <a href="mailto:{{ footer.email }}" style="display:block;color:#fff;font-size:14px;font-weight:500;text-decoration:none;margin-bottom:10px;font-family:'Montserrat',Arial,sans-serif;">{{ footer.email }}</a>
+            <a href="tel:{{ footer.phone }}"    style="display:block;color:#fff;font-size:14px;font-weight:500;text-decoration:none;font-family:'Montserrat',Arial,sans-serif;">{{ footer.phone }}</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+</center>
+</body>
+</html>

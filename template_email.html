@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biztech Newsletter — {{ month }} {{ year }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap');
+</style>
+<!--[if gte mso 9]>
+<xml>
+  <o:OfficeDocumentSettings>
+    <o:AllowPNG/>
+    <o:PixelsPerInch>96</o:PixelsPerInch>
+  </o:OfficeDocumentSettings>
+</xml>
+<![endif]-->
+<!--[if mso]>
+<style>
+table {border-collapse:collapse;}
+td,th {mso-table-lspace:0pt;mso-table-rspace:0pt;}
+</style>
+<![endif]-->
+</head>
+<body style="margin:0;padding:0;background:#f0f0f0;font-family:'Montserrat',Arial,sans-serif;">
+<center>
+<!-- ── NEWSLETTER WRAPPER ────────────────────────────────── -->
+<table align="center" width="800" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="width:800px;margin:0 auto;font-family:'Montserrat',Arial,sans-serif;">
+
+<!-- ══ 1. HEADER ══════════════════════════════════════════ -->
+<tr><td bgcolor="#ffffff" style="padding:20px 36px 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td style="vertical-align:middle;"><img src="{{ logo_img }}" alt="Biztech Logo" style="height:auto;width:auto;display:block;"></td>
+      <td style="vertical-align:middle;text-align:right;white-space:nowrap;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:36px;font-weight:800;color:#1a1a1a;letter-spacing:-0.5px;">{{ month }} <span style="color:#34AFBF;">{{ year }}</span></span></td>
+    </tr>
+  </table>
+</td></tr>
+<tr><td style="height:3px;background:#34AFBF;font-size:0;line-height:0;">&nbsp;</td></tr>
+
+<!-- ══ 2. CEO'S DESK ═══════════════════════════════════════ -->
+{% if show.ceo %}
+<tr><td bgcolor="#EEFAFF" style="background:linear-gradient(180deg,#EEFAFF 0%,#ffffff 100%);padding:36px 36px 40px;font-family:'Montserrat',Arial,sans-serif;">
+  <!-- Section title + icon -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0px;">
+    <tr>
+      <td style="vertical-align:top;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:34px;font-weight:800;color:#1a1a1a;line-height:1.15;display:block;">From <span style="color:#34AFBF;">CEO's Desk</span></span></td>
+      <td style="vertical-align:top;text-align:right;width:80px;"><img src="{{ icon_ceo }}" alt="" style="height:auto;"></td>
+    </tr>
+  </table>
+  <!-- CEO body: photo + message -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td width="180" style="vertical-align:middle;text-align:center;padding-right:40px;">
+        {% if ceo_photo %}
+        <!--[if mso]>
+        <v:oval style="width:140px;height:140px;margin-bottom:12px;" strokecolor="#34AFBF" strokeweight="1px">
+          <v:fill type="frame" src="{{ ceo_photo }}" />
+        </v:oval>
+        <![endif]-->
+        <!--[if !mso]><!-->
+        <div style="width:140px;height:140px;border-radius:50%;overflow:hidden;border:1px solid #34AFBF;margin:0 auto 12px;display:block;">
+          <img src="{{ ceo_photo }}" alt="" width="140" height="140" style="width:140px;height:140px;object-fit:cover;border-radius:50%;display:block;">
+        </div>
+        <!--<![endif]-->
+        {% endif %}
+        <div style="font-family:'Poppins',Arial,sans-serif;font-size:16px;font-weight:700;color:#1a1a1a;">{{ ceo_desk.ceo_name }}</div>
+        <div style="font-size:14px;color:#555;margin-top:4px;font-family:'Montserrat',Arial,sans-serif;">{{ ceo_desk.ceo_title }}</div>
+      </td>
+      <td style="vertical-align:middle;">
+        <p style="font-size:16px;line-height:1.75;color:#333;margin:0;font-family:'Montserrat',Arial,sans-serif;">{{ ceo_desk.message }}</p>
+      </td>
+    </tr>
+  </table>
+</td></tr>
+
+{% endif %}
+
+<!-- ══ 3. CAMPAIGN BANNER ═════════════════════════════════ -->
+{% if show.campaign %}
+<tr><td style="line-height:0;font-size:0;">
+  <img src="{{ campaign_banner }}" alt="Campaign Banner" width="800" style="width:100%;display:block;">
+</td></tr>
+{% endif %}
+
+<!-- ══ 3b. NEWLY ADDED CUSTOMERS ═══════════════════════════ -->
+{% if show.new_customers %}
+<tr><td bgcolor="#F0FBFC" style="background:linear-gradient(180deg,#F0FBFC 0%,#ffffff 100%);padding:36px 36px 40px;font-family:'Montserrat',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0px;">
+    <tr>
+      <td style="vertical-align:top;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:34px;font-weight:800;color:#1a1a1a;line-height:1.15;display:block;">Newly <span style="color:#34AFBF;">Added Customers</span></span></td>
+      <td style="vertical-align:top;text-align:right;width:80px;"><img src="{{ icon_customers }}" alt="" style="height:auto;"></td>
+    </tr>
+  </table>
+  <!-- Customer logo cards: up to 2 equal-width columns per row; a lone trailing card stays left-aligned in its own column width -->
+  {% set _n_cu = new_customers|length %}
+  {% for _r in range(((_n_cu - 1) // 2) + 1) %}
+    {% set _row = new_customers[_r * 2 : _r * 2 + 2] %}
+    {% set _c = _row|length %}
+    <table {% if _c == 1 %}width="50%"{% else %}width="100%"{% endif %} cellpadding="0" cellspacing="0" border="0" style="{% if not loop.last %}margin-bottom:16px;{% endif %}">
+      <tr>
+        {% for customer in _row %}
+        <td width="{{ '50%' if _c == 2 else '100%' }}" style="text-align:center;vertical-align:middle;padding:0 8px;">
+          <div style="border:1px solid #E5E9EC;border-radius:4px;background:#fff;padding:20px;">
+            <img src="{{ customer.image_url }}" alt="{{ customer.name }}" style="max-width:100%;max-height:60px;display:inline-block;">
+          </div>
+        </td>
+        {% endfor %}
+      </tr>
+    </table>
+  {% endfor %}
+</td></tr>
+{% endif %}
+
+<!-- ══ 4. DELIVERY INSIGHTS ══════════════════════════════ -->
+{% if show.delivery %}
+<tr><td bgcolor="#FFF2F6" style="background:linear-gradient(180deg,#FFF2F6 0%,#ffffff 100%);padding:36px 36px 40px;font-family:'Montserrat',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0px;">
+    <tr>
+      <td style="vertical-align:top;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:34px;font-weight:800;color:#1a1a1a;line-height:1.15;display:block;">Delivery <span style="color:#34AFBF;">Insights</span></span></td>
+      <td style="vertical-align:top;text-align:right;width:80px;"><img src="{{ icon_delivery }}" alt="" style="height:auto;"></td>
+    </tr>
+  </table>
+  {% for entry in delivery_insights %}
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="{% if not loop.last %}margin-bottom:24px;{% endif %}">
+    <tr>
+      {% if entry.logo_url %}
+      <td width="200" style="vertical-align:middle;padding-right:36px;">
+        <img src="{{ entry.logo_url }}" alt="Client Logo" style="max-width:180px;max-height:80px;display:block;">
+      </td>
+      {% endif %}
+      <td style="vertical-align:middle;">
+        <p style="font-size:16px;line-height:1.75;color:#333;margin:0;font-family:'Montserrat',Arial,sans-serif;font-weight:500;">{{ entry.description }}</p>
+      </td>
+    </tr>
+  </table>
+  {% endfor %}
+</td></tr>
+{% endif %}
+
+<!-- ══ 5. ACKNOWLEDGING EXCELLENCE ═══════════════════════ -->
+{% if show.excellence %}
+<tr><td bgcolor="#FFFAEE" style="background:linear-gradient(180deg,#FFFAEE 0%,#ffffff 100%);padding:36px 36px 40px;font-family:'Montserrat',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0px;">
+    <tr>
+      <td style="vertical-align:top;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:34px;font-weight:800;color:#1a1a1a;line-height:1.15;display:block;">Acknowledging <span style="color:#34AFBF;">Excellence</span></span></td>
+      <td style="vertical-align:top;text-align:right;width:80px;"><img src="{{ icon_excellence }}" alt="" style="height:auto;"></td>
+    </tr>
+  </table>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    {% for entry in acknowledging_excellence %}
+    <tr><td bgcolor="#FFF1D6" style="background:linear-gradient(135deg,#FFF1D6 0%,#ffffff 55%);border-radius:6px;padding:28px 32px;">
+      {% if entry.logo_url %}
+      <div style="display:inline-block;background:#fff;padding:8px 16px;margin-bottom:18px;">
+        <img src="{{ entry.logo_url }}" alt="Client Logo" style="max-height:48px;max-width:160px;object-fit:contain;display:block;">
+      </div>
+      {% endif %}
+      {% if entry.client_label %}
+      <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:10px;font-family:'Montserrat',Arial,sans-serif;">{{ entry.client_label }}</div>
+      {% endif %}
+      <div style="font-size:15px;line-height:1.8;color:#444;white-space:pre-line;font-family:'Montserrat',Arial,sans-serif;font-weight:500;">{{ entry.testimonial }}</div>
+    </td></tr>
+    {% if not loop.last %}<tr><td style="height:16px;font-size:0;line-height:0;">&nbsp;</td></tr>{% endif %}
+    {% endfor %}
+  </table>
+</td></tr>
+{% endif %}
+
+<!-- ══ 6. HR INSIDER ═════════════════════════════════════ -->
+{% if show.hr %}
+{% macro hr_divider(text) %}
+  <table align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 16px;">
+    <tr>
+      <td style="width:40px;vertical-align:top;padding-top:10px;font-size:0;line-height:0;border-bottom:2px solid #333333;">&nbsp;</td>
+      <td style="padding:0 12px;vertical-align:top;white-space:nowrap;font-family:'Poppins',Arial,sans-serif;font-size:18px;line-height:22px;font-weight:700;color:#1a1a1a;">{{ text }}</td>
+      <td style="width:40px;vertical-align:top;padding-top:10px;font-size:0;line-height:0;border-bottom:2px solid #333333;">&nbsp;</td>
+    </tr>
+  </table>
+{% endmacro %}
+{% macro hr_photo_grid(photos) %}
+  {% set _n = photos|length %}
+  {% if _n > 0 %}
+    {% for _r in range(((_n - 1) // 3) + 1) %}
+      {% set _row = photos[_r * 3 : _r * 3 + 3] %}
+      {% set _c = _row|length %}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          {% if _c == 1 %}
+          <td width="33%" style="font-size:0;line-height:0;">&nbsp;</td>
+          <td width="34%" style="padding:2px;vertical-align:top;">
+            <img src="{{ _row[0] }}" alt="" width="100%" height="175" style="width:100%;height:175px;object-fit:cover;display:block;">
+          </td>
+          <td width="33%" style="font-size:0;line-height:0;">&nbsp;</td>
+          {% else %}
+          {% for photo in _row %}
+          <td width="{{ '50' if _c == 2 else '33' }}%" style="padding:2px;vertical-align:top;">
+            <img src="{{ photo }}" alt="" width="100%" height="175" style="width:100%;height:175px;object-fit:cover;display:block;">
+          </td>
+          {% endfor %}
+          {% endif %}
+        </tr>
+      </table>
+    {% endfor %}
+  {% endif %}
+{% endmacro %}
+<tr><td bgcolor="#F2EFFF" style="background:linear-gradient(180deg,#F2EFFF 0%,#ffffff 100%);padding:36px 0 40px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <!-- Section title -->
+    <tr><td style="padding:0 36px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0px;">
+        <tr>
+          <td style="vertical-align:top;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:34px;font-weight:800;color:#1a1a1a;line-height:1.15;display:block;">HR <span style="color:#34AFBF;">Insider</span></span></td>
+          <td style="vertical-align:top;text-align:right;width:80px;"><img src="{{ icon_hr }}" alt="" style="height:auto;"></td>
+        </tr>
+      </table>
+      {% if hr_wellness_banner and hr.wellness_title %}
+      {{ hr_divider(hr.wellness_title) }}
+      {% endif %}
+    </td></tr>
+    {% if hr_wellness_banner %}
+    <!-- Wellness banner — same 36px inset as the title/divider above (was
+         full-width before, misaligned against everything else in the section) -->
+    <tr><td style="line-height:0;font-size:0;padding:24px 36px 32px;">
+      <img src="{{ hr_wellness_banner }}" alt="" style="width:100%;display:block;">
+    </td></tr>
+    {% endif %}
+    <!-- Events: dynamic count, each with its own title + photo grid -->
+    {% for event in hr.events %}
+    <tr><td style="padding:0 36px;{% if not loop.last %}padding-bottom:24px;{% endif %}">
+      {% if event.title %}
+      {{ hr_divider(event.title) }}
+      {% endif %}
+      {{ hr_photo_grid(event.photos) }}
+    </td></tr>
+    {% endfor %}
+  </table>
+</td></tr>
+{% endif %}
+
+<!-- ══ 7. REWARDS & RECOGNITION ══════════════════════════ -->
+{% if show.rewards %}
+<tr><td bgcolor="#F4FFFC" style="background:linear-gradient(180deg,#F4FFFC 0%,#ffffff 100%);padding:36px 36px 40px;font-family:'Montserrat',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0px;">
+    <tr>
+      <td style="vertical-align:top;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:34px;font-weight:800;color:#1a1a1a;line-height:1.15;display:block;">Rewards &amp; <span style="color:#34AFBF;">Recognition</span></span></td>
+      <td style="vertical-align:top;text-align:right;width:80px;"><img src="{{ icon_rewards }}" alt="" style="height:auto;"></td>
+    </tr>
+  </table>
+  <!-- Awards: max 2 solo awards per row, multi-recipient awards take a full row (photos wrap max 3 per row), a lone trailing solo also fills its row -->
+  {% macro award_card(award, a_photos, full_width) %}
+    {% set _n_rc = award.recipients|length %}
+    {% set _widest_row = 3 if _n_rc > 3 else (_n_rc if _n_rc > 0 else 1) %}
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="overflow:hidden;">
+      <tr><td colspan="{{ _widest_row }}" style="background:#34AFBF;color:#fff;text-align:center;font-family:'Poppins',Arial,sans-serif;font-size:14px;font-weight:600;padding:10px;letter-spacing:0.3px;">{{ award.title }}</td></tr>
+      {% if award.recipients|length > 1 %}
+      {% for _rr in range(((_n_rc - 1) // 3) + 1) %}
+        {% set _photo_row = a_photos[_rr * 3 : _rr * 3 + 3] %}
+        {% set _recip_row = award.recipients[_rr * 3 : _rr * 3 + 3] %}
+        {% set _n_cols = _photo_row|length %}
+        {% set _cw = (100 // _n_cols) %}
+        {# Fixed pixel height (not aspect-ratio, which many email clients ignore) keeps every
+           column's photo the same height even though non-last columns are ~4px narrower
+           from the gap padding — that mismatch is what caused the earlier stray gap bug. #}
+        {% set _col_px = ((724 - (_n_cols - 1) * 4) / _n_cols) | int %}
+        {% set _img_h = (_col_px * 3 / 4) | int %}
+        <tr>
+          {% for photo in _photo_row %}
+          <td width="{{ _cw }}%" style="vertical-align:top;padding:0 {% if not loop.last %}4px{% else %}0{% endif %} 0 0;">
+            <img src="{{ photo }}" alt="" width="100%" height="{{ _img_h }}" style="width:100%;height:{{ _img_h }}px;display:block;object-fit:cover;">
+          </td>
+          {% endfor %}
+        </tr>
+        <tr>
+          {% for recipient in _recip_row %}
+          <td width="{{ _cw }}%" style="vertical-align:top;padding:0 {% if not loop.last %}4px{% else %}0{% endif %} 0 0;">
+            <div style="background:#DDEDFF;text-align:center;padding:14px 10px;">
+              <div style="font-size:16px;font-weight:700;color:#1E528D;font-family:'Montserrat',Arial,sans-serif;">{{ recipient.name }}</div>
+              <div style="font-size:13px;font-weight:500;color:#1E528D;margin-top:3px;font-family:'Montserrat',Arial,sans-serif;">{{ recipient.designation }}</div>
+            </div>
+          </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+      {% else %}
+      {% set _solo_px = 724 if full_width else 355 %}
+      {% set _solo_h = (_solo_px * 3 / 4) | int %}
+      <tr><td style="padding:0;">
+        <img src="{{ a_photos[0] if a_photos else '' }}" alt="" width="100%" height="{{ _solo_h }}" style="width:100%;height:{{ _solo_h }}px;display:block;object-fit:cover;">
+      </td></tr>
+      {% if award.recipients %}
+      <tr><td style="background:#DDEDFF;text-align:center;padding:14px 10px;">
+        <div style="font-size:16px;font-weight:700;color:#1E528D;font-family:'Montserrat',Arial,sans-serif;">{{ award.recipients[0].name }}</div>
+        <div style="font-size:13px;font-weight:500;color:#1E528D;margin-top:3px;font-family:'Montserrat',Arial,sans-serif;">{{ award.recipients[0].designation }}</div>
+      </td></tr>
+      {% endif %}
+      {% endif %}
+    </table>
+  {% endmacro %}
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  {% for row in reward_rows %}
+    {% set _row_pad = "padding:2px 2px 15px 2px;" if not loop.last else "padding:2px;" %}
+    <tr>
+    {% if row.entries|length == 1 %}
+      <td colspan="2" style="{{ _row_pad }}vertical-align:top;">{{ award_card(row.entries[0].award, row.entries[0].photos, true) }}</td>
+    {% else %}
+      {% for entry in row.entries %}
+      <td width="50%" style="{{ _row_pad }}vertical-align:top;">{{ award_card(entry.award, entry.photos, false) }}</td>
+      {% endfor %}
+    {% endif %}
+    </tr>
+  {% endfor %}
+  </table>
+</td></tr>
+{% endif %}
+
+<!-- ══ 7b. EMPLOYEE CERTIFICATIONS ════════════════════════ -->
+{% if show.certifications %}
+<tr><td bgcolor="#F0FBFC" style="background:linear-gradient(180deg,#F0FBFC 0%,#ffffff 100%);padding:36px 36px 40px;font-family:'Montserrat',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0px;">
+    <tr>
+      <td style="vertical-align:top;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:34px;font-weight:800;color:#1a1a1a;line-height:1.15;display:block;">Employee <span style="color:#34AFBF;">Certifications</span></span></td>
+      <td style="vertical-align:top;text-align:right;width:80px;"><img src="{{ icon_certifications }}" alt="" style="height:auto;"></td>
+    </tr>
+  </table>
+  <!-- Certificate cards: up to 2 per row, always centered regardless of count -->
+  {% set _n_ce = certifications|length %}
+  {% for _r in range(((_n_ce - 1) // 2) + 1) %}
+    {% set _row = certifications[_r * 2 : _r * 2 + 2] %}
+    {% set _c = _row|length %}
+    <table {% if _c == 1 %}align="center" width="49%"{% else %}width="100%"{% endif %} cellpadding="0" cellspacing="0" border="0" style="{% if not loop.last %}margin-bottom:16px;{% endif %}">
+      <tr>
+        {% for certification in _row %}
+        <td style="text-align:center;vertical-align:top;padding:0 8px;">
+          <div style="border:1px solid #E5E9EC;border-radius:10px;background:#fff;padding:4px;">
+            <img src="{{ certification.image_url }}" alt="{{ certification.name }}" width="100%" style="width:100%;display:block;border-radius:4px;">
+          </div>
+        </td>
+        {% endfor %}
+      </tr>
+    </table>
+  {% endfor %}
+</td></tr>
+{% endif %}
+
+<!-- ══ 8. WORK ANNIVERSARIES ═════════════════════════════ -->
+{% if show.anniversaries %}
+<tr><td bgcolor="#FFF9EB" style="background:linear-gradient(180deg,#FFF9EB 0%,#ffffff 100%);padding:36px 36px 40px;font-family:'Montserrat',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0px;">
+    <tr>
+      <td style="vertical-align:top;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:34px;font-weight:800;color:#1a1a1a;line-height:1.15;display:block;">Work <span style="color:#34AFBF;">Anniversaries</span></span></td>
+      <td style="vertical-align:top;text-align:right;width:80px;"><img src="{{ icon_anniversaries }}" alt="" style="height:auto;"></td>
+    </tr>
+  </table>
+  <!-- Anniversary cards: max 3 per row, any leftover row fills the width evenly.
+       Each card IS a <td> (no nested table/div) so equal-height comes from
+       plain table row semantics — not a height:100% CSS chain, which Gmail's
+       paste sanitizer was found to strip, leaving the shorter card's white
+       background cut off before the taller neighbor's. Gaps between cards
+       are dedicated spacer <td>s (fixed pixel width), since padding can't be
+       used for the gap when the card's own background must fill its full
+       cell — padding shares that same background, so it wouldn't show a gap. -->
+  {% set _n_ann = anniversaries|length %}
+  {% if _n_ann > 0 %}
+    {% for _r in range(((_n_ann - 1) // 3) + 1) %}
+      {% set _row = anniversaries[_r * 3 : _r * 3 + 3] %}
+      {% set _c = _row|length %}
+      {% set _gutter = 14 %}
+      {% set _card_w = (728 - (_c - 1) * _gutter) // _c %}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          {% for group in _row %}
+          {% if not loop.first %}<td width="{{ _gutter }}" style="font-size:0;line-height:0;">&nbsp;</td>{% endif %}
+          <td width="{{ _card_w }}" valign="top" style="position:relative;border:1.5px solid #FFF2D9;border-radius:10px;background:#fff;padding:18px 22px;">
+            <div style="margin-bottom:8px;">
+              <span style="font-family:'Poppins',Arial,sans-serif;font-size:28px;font-weight:900;color:#34AFBF;line-height:1;">{{ group.years }}</span>
+              <span style="font-family:'Poppins',Arial,sans-serif;font-size:15px;font-weight:600;color:#34AFBF;margin-left:4px;">{{ "Year" if group.years == 1 else "Years" }}</span>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:#1a1a1a;line-height:1.5;font-family:'Montserrat',Arial,sans-serif;">{% for name in group.names %}{{ name }}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
+            {% if group.balloon %}
+            <!--[if mso]>
+            <v:shape style="position:absolute;{{ group.balloon.style }};width:38px;height:46px;" stroked="false">
+              <v:fill type="frame" src="{{ group.balloon.icon }}" />
+            </v:shape>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            <img src="{{ group.balloon.icon }}" alt="" width="38" style="position:absolute;{{ group.balloon.style }};width:38px;height:auto;">
+            <!--<![endif]-->
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+      </table>
+      {% if not loop.last %}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:14px;font-size:0;line-height:0;">&nbsp;</td></tr></table>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+</td></tr>
+{% endif %}
+
+<!-- ══ 8b. NEW ADDITIONS ═══════════════════════════════════ -->
+{% if show.new_joinees %}
+<tr><td bgcolor="#FFF0F5" style="background:linear-gradient(180deg,#FFF0F5 0%,#ffffff 100%);padding:36px 36px 40px;font-family:'Montserrat',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0px;">
+    <tr>
+      <td style="vertical-align:top;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:34px;font-weight:800;color:#1a1a1a;line-height:1.15;display:block;">New Addition <span style="color:#34AFBF;">to the Biztech Family</span></span></td>
+      <td style="vertical-align:top;text-align:right;width:80px;"><img src="{{ icon_new_joinees }}" alt="" style="height:auto;"></td>
+    </tr>
+  </table>
+  <!-- Person cards: up to 3 per row, always centered regardless of count -->
+  {% set _n_nj = new_joinees|length %}
+  {% for _r in range(((_n_nj - 1) // 3) + 1) %}
+    {% set _row = new_joinees[_r * 3 : _r * 3 + 3] %}
+    {% set _c = _row|length %}
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        {% for person in _row %}
+        <td width="{{ '100' if _c == 1 else ('50' if _c == 2 else '33') }}%" style="text-align:center;vertical-align:top;padding:12px 10px;">
+          <!--[if mso]>
+          <v:oval style="width:125px;height:125px;" fillcolor="#ffffff" strokecolor="#ffffff" strokeweight="3px">
+            <v:fill type="frame" src="{{ person.image_url }}" />
+          </v:oval>
+          <![endif]-->
+          <!--[if !mso]><!-->
+          <div style="width:125px;height:125px;box-sizing:border-box;border:3px solid #fff;border-radius:50%;overflow:hidden;margin:0 auto 0;display:block;">
+            <img src="{{ person.image_url }}" alt="" width="119" height="119" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+          </div>
+          <!--<![endif]-->
+          <div style="font-family:'Poppins',Arial,sans-serif;font-size:16px;font-weight:700;color:#1a1a1a;">{{ person.name }}</div>
+          <div style="font-size:13px;color:#555;margin-top:4px;font-family:'Montserrat',Arial,sans-serif;line-height:1.4;">{{ person.designation }}</div>
+        </td>
+        {% endfor %}
+      </tr>
+    </table>
+  {% endfor %}
+</td></tr>
+{% endif %}
+
+<!-- ══ 9. NEW OPENINGS ═══════════════════════════════════ -->
+{% if show.openings %}
+<tr><td bgcolor="#F2EFFF" style="background:linear-gradient(180deg,#F2EFFF 0%,#ffffff 100%);padding:36px 36px 40px;font-family:'Montserrat',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0px;">
+    <tr>
+      <td style="vertical-align:top;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:34px;font-weight:800;color:#1a1a1a;line-height:1.15;display:block;">New <span style="color:#34AFBF;">Openings</span></span></td>
+      <td style="vertical-align:top;text-align:right;width:80px;"><img src="{{ icon_openings }}" alt="" style="height:auto;"></td>
+    </tr>
+  </table>
+  <!-- Openings table + QR -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td style="vertical-align:top;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <!-- Header row -->
+          <tr>
+            <td style="color:#1a1a1a;font-weight:600;text-align:left;padding:10px 14px;border-bottom:2px solid rgba(108,99,255,0.2);font-size:13px;text-transform:uppercase;letter-spacing:0.4px;font-family:'Montserrat',Arial,sans-serif;">Position</td>
+            <td style="color:#1a1a1a;font-weight:600;text-align:left;padding:10px 14px;border-bottom:2px solid rgba(108,99,255,0.2);font-size:13px;text-transform:uppercase;letter-spacing:0.4px;font-family:'Montserrat',Arial,sans-serif;">Openings</td>
+            <td style="color:#1a1a1a;font-weight:600;text-align:left;padding:10px 14px;border-bottom:2px solid rgba(108,99,255,0.2);font-size:13px;text-transform:uppercase;letter-spacing:0.4px;font-family:'Montserrat',Arial,sans-serif;">Experience</td>
+          </tr>
+          {% for job in new_openings.positions %}
+          <tr style="background-color:#F1EEFF;">
+            <td style="padding:16px 14px;color:#1a1a1a;font-weight:700;font-size:14px;line-height:1.4;border-bottom:1px solid #fff;font-family:'Montserrat',Arial,sans-serif;">{{ job.title }}</td>
+            <td style="padding:16px 14px;color:#1a1a1a;font-weight:500;font-size:14px;line-height:1.4;border-bottom:1px solid #fff;font-family:'Montserrat',Arial,sans-serif;">{{ job.openings }}</td>
+            <td style="padding:16px 14px;color:#1a1a1a;font-weight:500;font-size:14px;line-height:1.4;border-bottom:1px solid #fff;font-family:'Montserrat',Arial,sans-serif;">{{ job.experience }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </td>
+      <td width="150" style="vertical-align:top;text-align:center;padding-left:16px;">
+        {% if openings_qr_img %}
+        <img src="{{ openings_qr_img }}" alt="QR Code" width="130" height="130" style="width:130px;height:130px;display:block;">
+        {% endif %}
+        <a href="{{ new_openings.view_all_url }}" style="display:block;background:#6C63FF;color:#fff;font-size:14px;font-weight:600;text-align:center;padding:10px 0;text-decoration:none;width:130px;font-family:'Montserrat',Arial,sans-serif;">View All</a>
+      </td>
+    </tr>
+  </table>
+</td></tr>
+{% endif %}
+
+<!-- ══ 10. MARKETING HIGHLIGHTS ══════════════════════════ -->
+{% if show.marketing %}
+<tr><td bgcolor="#FFFBF2" style="background:linear-gradient(180deg,#FFFBF2 0%,#ffffff 100%);padding:36px 36px 40px;font-family:'Montserrat',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0px;">
+    <tr>
+      <td style="vertical-align:top;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:34px;font-weight:800;color:#1a1a1a;line-height:1.15;display:block;">Marketing <span style="color:#34AFBF;">Highlights</span></span></td>
+      <td style="vertical-align:top;text-align:right;width:80px;"><img src="{{ icon_marketing }}" alt="" style="height:auto;"></td>
+    </tr>
+  </table>
+  <table align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 24px;">
+    <tr>
+      <td style="width:40px;vertical-align:top;padding-top:10px;font-size:0;line-height:0;border-bottom:2px solid #333333;">&nbsp;</td>
+      <td style="padding:0 12px;vertical-align:top;white-space:nowrap;font-family:'Poppins',Arial,sans-serif;font-size:18px;line-height:22px;font-weight:700;color:#1a1a1a;">Blog posts</td>
+      <td style="width:40px;vertical-align:top;padding-top:10px;font-size:0;line-height:0;border-bottom:2px solid #333333;">&nbsp;</td>
+    </tr>
+  </table>
+  <!-- Blog cards: 2 per row -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      {% for i, post in blog_posts_enum %}
+      <td width="50%" style="vertical-align:top;padding:{% if loop.index0 == 0 %}0 8px 0 0{% else %}0 0 0 8px{% endif %};">
+        <table width="100%" height="100%" cellpadding="0" cellspacing="0" border="0" style="height:100%;">
+          <tr>
+            <td style="border:1px solid #eee;border-radius:10px;overflow:hidden;background:#fff;" valign="top">
+              <a href="{{ post.url }}" target="_blank" style="text-decoration:none;display:block;">
+                {% if blog_images[i] %}
+                <img src="{{ blog_images[i] }}" alt="" width="100%" height="237" style="width:100%;height:237px;display:block;object-fit:cover;">
+                {% endif %}
+                <div style="padding:16px;font-size:14px;font-weight:600;color:#1a1a1a;line-height:1.5;font-family:'Montserrat',Arial,sans-serif;min-height:95px;box-sizing:border-box;">{{ post.title }}</div>
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+      {% endfor %}
+    </tr>
+  </table>
+  <div style="text-align:center;margin-top:24px;">
+    <a href="{{ marketing.view_all_url }}" style="display:inline-block;background:#EC9B00;color:#fff;font-size:14px;font-weight:600;padding:12px 32px;border-radius:6px;text-decoration:none;font-family:'Montserrat',Arial,sans-serif;">View All</a>
+  </div>
+</td></tr>
+{% endif %}
+
+<!-- ══ 10b. UPCOMING EVENT ANNOUNCEMENT ══════════════════ -->
+{% if show.announcements %}
+<tr><td bgcolor="#EAF6FF" style="background:linear-gradient(180deg,#EAF6FF 0%,#ffffff 100%);padding:36px 36px 40px;font-family:'Montserrat',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0px;">
+    <tr>
+      <td style="vertical-align:top;"><span style="font-family:'Poppins',Arial,sans-serif;font-size:34px;font-weight:800;color:#1a1a1a;line-height:1.15;display:block;">Upcoming Event <span style="color:#34AFBF;">Announcement</span></span></td>
+      <td style="vertical-align:top;text-align:right;width:80px;"><img src="{{ icon_events }}" alt="" style="height:auto;"></td>
+    </tr>
+  </table>
+  <!-- Announcement banners: up to 2 per row, always centered regardless of count -->
+  {% set _n_an = announcements|length %}
+  {% for _r in range(((_n_an - 1) // 2) + 1) %}
+    {% set _row = announcements[_r * 2 : _r * 2 + 2] %}
+    {% set _c = _row|length %}
+    <table {% if _c == 1 %}align="center" width="49%"{% else %}width="100%"{% endif %} cellpadding="0" cellspacing="0" border="0" style="{% if loop.first %}margin-top:15px;{% endif %}{% if not loop.last %}margin-bottom:16px;{% endif %}">
+      <tr>
+        {% for announcement in _row %}
+        <td style="vertical-align:top;padding:0;">
+          <img src="{{ announcement.image_url }}" alt="{{ announcement.name }}" width="100%" style="width:100%;display:block;">
+        </td>
+        {% if not loop.last %}<td width="4" style="font-size:0;line-height:0;padding:0;">&nbsp;</td>{% endif %}
+        {% endfor %}
+      </tr>
+    </table>
+  {% endfor %}
+</td></tr>
+{% endif %}
+
+<!-- ══ 11. FOOTER ══════════════════════════════════════════ -->
+<tr><td bgcolor="#34AFBF" style="padding:28px 36px 24px;font-family:'Montserrat',Arial,sans-serif;">
+  <table width="728" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td width="430" style="vertical-align:middle;color:#fff;padding-right:20px;">
+        <div style="font-size:14px;font-weight:500;line-height:1.75;color:#fff;">{{ footer.address }}</div>
+        <table cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;">
+          <tr>
+            <td style="padding-right:8px;"><a href="{{ footer.social.linkedin }}"  target="_blank"><img src="{{ icon_social_linkedin }}"  width="34" height="34" alt="LinkedIn"  style="display:block;"></a></td>
+            <td style="padding-right:8px;"><a href="{{ footer.social.facebook }}"  target="_blank"><img src="{{ icon_social_facebook }}"  width="34" height="34" alt="Facebook"  style="display:block;"></a></td>
+            <td style="padding-right:8px;"><a href="{{ footer.social.youtube }}"   target="_blank"><img src="{{ icon_social_youtube }}"   width="34" height="34" alt="YouTube"   style="display:block;"></a></td>
+            <td style="padding-right:8px;"><a href="{{ footer.social.instagram }}" target="_blank"><img src="{{ icon_social_instagram }}" width="34" height="34" alt="Instagram" style="display:block;"></a></td>
+            <td style="padding-right:8px;"><a href="{{ footer.social.twitter }}"   target="_blank"><img src="{{ icon_social_twitter }}"   width="34" height="34" alt="Twitter"   style="display:block;"></a></td>
+            <td><a href="{{ footer.social.dribbble }}"  target="_blank"><img src="{{ icon_social_dribbble }}"  width="34" height="34" alt="Dribbble"  style="display:block;"></a></td>
+          </tr>
+        </table>
+      </td>
+      <td width="2" bgcolor="#5DC4CF" style="padding:0;">&nbsp;</td>
+      <td width="296" style="vertical-align:top;padding-left:24px;">
+        <a href="mailto:{{ footer.email }}" style="display:block;color:#fff;font-size:14px;font-weight:500;text-decoration:none;margin-bottom:10px;">{{ footer.email }}</a>
+        <a href="tel:{{ footer.phone }}"    style="display:block;color:#fff;font-size:14px;font-weight:500;text-decoration:none;">{{ footer.phone }}</a>
+      </td>
+    </tr>
+  </table>
+</td></tr>
+
+</table><!-- end newsletter wrapper -->
+</center>
+</body>
+</html>
