@@ -140,6 +140,24 @@ def build(out_path: Path):
     return out_path, header_row
 
 
+def ensure_folders(sheet_path: Path) -> list[str]:
+    """
+    Create the Row Data folder for every section the sheet names, next to the
+    sheet itself. Nested paths (events/event1, marketing/blogs) are created in
+    full. Existing folders and their contents are left alone.
+    """
+    root = sheet_path.parent / "Row Data"
+    made = []
+    for _sr, _section, _poc, _field, folder, _hint in ROWS:
+        if not folder:
+            continue
+        target = root / folder.split("/", 1)[1] if folder.startswith("Row Data/") else root / folder
+        if not target.is_dir():
+            target.mkdir(parents=True, exist_ok=True)
+            made.append(target.relative_to(root).as_posix())
+    return made
+
+
 if __name__ == "__main__":
     target = Path(sys.argv[1]) if len(sys.argv) > 1 else BASE_DIR / "master_template.xlsx"
     if not target.is_absolute():
@@ -148,5 +166,8 @@ if __name__ == "__main__":
     print(f"Master template written: {path}")
     print(f"  {len(ROWS)} sections, header on row {header_row}")
     print(f"  Contributors fill column D (Content); columns E/F are the wiring.")
+    made = ensure_folders(path)
+    if made:
+        print(f"  Created {len(made)} photo folder(s): {', '.join(made)}")
     print(f"\nNext: share it, collect it back, then run")
     print(f"  python import_content.py --sheet={target.name}")

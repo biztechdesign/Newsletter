@@ -22,7 +22,7 @@ from pathlib import Path
 
 import openpyxl
 
-from create_master_template import build
+from create_master_template import build, ensure_folders
 
 BASE_DIR = Path(__file__).parent
 
@@ -122,9 +122,12 @@ def main():
             missing.append(f"{field} x{left}")
 
     wb.save(target)
+    made = ensure_folders(target)
 
     print(f"Migrated: {target}")
     print(f"  Backup:  {backup.name}")
+    if made:
+        print(f"  Created {len(made)} photo folder(s): {', '.join(made)}")
     print(f"\n  Carried across ({len(carried)}):")
     for line in carried:
         print(f"    {line}")
