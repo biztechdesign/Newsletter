@@ -58,15 +58,18 @@ def sections_dir(month: str, year: str) -> Path:
 SECTIONS = [
     ("Director-desk", "section.sec-ceo"),
     ("Whistle-Blow", "section.sec-campaign"),
+    ("Expo-Exhibition", "section.sec-expo"),
     ("Newly-Added-Customers", "section.sec-new-customers"),
     ("Delivery-Insights", "section.sec-delivery"),
     ("Acknowledging-Excellence", "section.sec-excellence"),
     ("HR-INSIDER", "section.sec-hr"),
     ("Rewards-Recognitions", "section.sec-rewards"),
-    ("Employee-Certifications", "section.sec-certifications"),
-    ("WORK-ANNIVERSARY", "section.sec-anniversaries"),
     ("NEW-ADDITION", "section.sec-new-joinees"),
+    ("WORK-ANNIVERSARY", "section.sec-anniversaries"),
+    ("Employee-Certifications", "section.sec-certifications"),
     ("new-openings", "section.sec-openings"),
+    ("Employee-Training", "section.sec-training"),
+    ("Employee-Workshop", "section.sec-workshop"),
     ("Upcoming-Event-Announcement", "section.sec-announcements"),
 ]
 

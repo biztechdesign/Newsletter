@@ -75,19 +75,22 @@ SOCIAL_ICONS = {
 SECTIONS_BEFORE_MARKETING = [
     ("Director-desk", "From CEO's Desk"),
     ("Whistle-Blow", "Campaign Banner"),
+    ("Expo-Exhibition", "Expo & Exhibition"),
     ("Newly-Added-Customers", "Newly Added Customers"),
     ("Delivery-Insights", "Delivery Insights"),
     ("Acknowledging-Excellence", "Acknowledging Excellence"),
     ("HR-INSIDER", "HR Insider"),
     ("Rewards-Recognitions", "Rewards & Recognitions"),
-    ("Employee-Certifications", "Employee Certifications"),
-    ("WORK-ANNIVERSARY", "Work Anniversaries"),
     ("NEW-ADDITION", "New Addition to the Biztech Family"),
+    ("WORK-ANNIVERSARY", "Work Anniversaries"),
+    ("Employee-Certifications", "Employee Certifications"),
     ("new-openings", "New Openings"),
-]
-SECTIONS_AFTER_MARKETING = [
+    ("Employee-Training", "Employee Training"),
+    ("Employee-Workshop", "Employee Workshop"),
     ("Upcoming-Event-Announcement", "Upcoming Event Announcement"),
 ]
+# Marketing Highlights is last in the master sheet, so nothing follows it.
+SECTIONS_AFTER_MARKETING = []
 
 
 # Must match screenshot_sections.py's device_scale_factor — the PNGs are

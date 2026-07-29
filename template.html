@@ -234,6 +234,22 @@
     white-space: pre-line;
   }
 
+  /* ── Photo-gallery sections (Expo / Training / Workshop) ────── */
+  /* Same layout as the HR events grid; each gets its own tint so it doesn't
+     blend into the section above or below it in the running order. */
+  .sec-expo {
+    background: linear-gradient(180deg, #EFFBF3 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .sec-training {
+    background: linear-gradient(180deg, #FFF6EE 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+  .sec-workshop {
+    background: linear-gradient(180deg, #F3F7FF 0%, #ffffff 100%);
+    padding: 48px 48px 52px;
+  }
+
   /* ── 6. HR INSIDER (wellness + events unified gradient block) ── */
   .sec-hr {
     background: linear-gradient(180deg, #F2EFFF 0%, #ffffff 100%);
@@ -724,6 +740,24 @@
   {% endif %}
 
   <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 3a. EXPO / EXHIBITION (photo gallery)                       -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.expo %}
+  <section class="sec-expo">
+    <div class="section-header">
+      <h2 class="section-title">Expo &amp; <span>Exhibition</span></h2>
+      <div class="section-icon"><img src="{{ icon_expo }}" alt=""></div>
+    </div>
+    {% if expo.title %}<div class="sub-divider">{{ expo.title }}</div>{% endif %}
+    <div class="events-grid">
+      {% for photo in expo.photos %}
+      <img class="ev-img" src="{{ photo }}" alt="Expo Photo">
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
   <!-- 3b. NEWLY ADDED CUSTOMERS                                  -->
   <!-- ══════════════════════════════════════════════════════════ -->
   {% if show.new_customers %}
@@ -875,18 +909,22 @@
   {% endif %}
 
   <!-- ══════════════════════════════════════════════════════════ -->
-  <!-- 7b. EMPLOYEE CERTIFICATIONS                                -->
+  <!-- 8b. NEW ADDITIONS                                          -->
   <!-- ══════════════════════════════════════════════════════════ -->
-  {% if show.certifications %}
-  <section class="sec-certifications">
+  {% if show.new_joinees %}
+  <section class="sec-new-joinees">
     <div class="section-header">
-      <h2 class="section-title">Employee <span>Certifications</span></h2>
-      <div class="section-icon"><img src="{{ icon_certifications }}" alt=""></div>
+      <h2 class="section-title">New Addition <span>to the Biztech Family</span></h2>
+      <div class="section-icon"><img src="{{ icon_new_joinees }}" alt=""></div>
     </div>
-    <div class="certifications-grid">
-      {% for certification in certifications %}
-      <div class="certification-card">
-        <img src="{{ certification.image_url }}" alt="{{ certification.name }}">
+    <div class="new-joinees-grid">
+      {% for person in new_joinees %}
+      <div class="nj-card">
+        <div class="nj-photo">
+          <img src="{{ person.image_url }}" alt="{{ person.name }}">
+        </div>
+        <div class="nj-name">{{ person.name }}</div>
+        <div class="nj-role">{{ person.designation }}</div>
       </div>
       {% endfor %}
     </div>
@@ -922,22 +960,18 @@
   {% endif %}
 
   <!-- ══════════════════════════════════════════════════════════ -->
-  <!-- 8b. NEW ADDITIONS                                          -->
+  <!-- 7b. EMPLOYEE CERTIFICATIONS                                -->
   <!-- ══════════════════════════════════════════════════════════ -->
-  {% if show.new_joinees %}
-  <section class="sec-new-joinees">
+  {% if show.certifications %}
+  <section class="sec-certifications">
     <div class="section-header">
-      <h2 class="section-title">New Addition <span>to the Biztech Family</span></h2>
-      <div class="section-icon"><img src="{{ icon_new_joinees }}" alt=""></div>
+      <h2 class="section-title">Employee <span>Certifications</span></h2>
+      <div class="section-icon"><img src="{{ icon_certifications }}" alt=""></div>
     </div>
-    <div class="new-joinees-grid">
-      {% for person in new_joinees %}
-      <div class="nj-card">
-        <div class="nj-photo">
-          <img src="{{ person.image_url }}" alt="{{ person.name }}">
-        </div>
-        <div class="nj-name">{{ person.name }}</div>
-        <div class="nj-role">{{ person.designation }}</div>
+    <div class="certifications-grid">
+      {% for certification in certifications %}
+      <div class="certification-card">
+        <img src="{{ certification.image_url }}" alt="{{ certification.name }}">
       </div>
       {% endfor %}
     </div>
@@ -985,6 +1019,61 @@
   {% endif %}
 
   <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- Employee Training (photo gallery)              -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.training %}
+  <section class="sec-training">
+    <div class="section-header">
+      <h2 class="section-title">Employee <span>Training</span></h2>
+      <div class="section-icon"><img src="{{ icon_training }}" alt=""></div>
+    </div>
+    {% if training.title %}<div class="sub-divider">{{ training.title }}</div>{% endif %}
+    <div class="events-grid">
+      {% for photo in training.photos %}
+      <img class="ev-img" src="{{ photo }}" alt="Training Photo">
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- Employee Workshop (photo gallery)              -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.workshop %}
+  <section class="sec-workshop">
+    <div class="section-header">
+      <h2 class="section-title">Employee <span>Workshop</span></h2>
+      <div class="section-icon"><img src="{{ icon_events }}" alt=""></div>
+    </div>
+    {% if workshop.title %}<div class="sub-divider">{{ workshop.title }}</div>{% endif %}
+    <div class="events-grid">
+      {% for photo in workshop.photos %}
+      <img class="ev-img" src="{{ photo }}" alt="Workshop Photo">
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 10b. UPCOMING EVENT ANNOUNCEMENT                           -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if show.announcements %}
+  <section class="sec-announcements">
+    <div class="section-header">
+      <h2 class="section-title">Upcoming Event <span>Announcement</span></h2>
+      <div class="section-icon"><img src="{{ icon_events }}" alt=""></div>
+    </div>
+    <div class="announcements-grid">
+      {% for announcement in announcements %}
+      <div class="announcement-card">
+        <img src="{{ announcement.image_url }}" alt="{{ announcement.name }}">
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════ -->
   <!-- 10. MARKETING HIGHLIGHTS                                   -->
   <!-- ══════════════════════════════════════════════════════════ -->
   {% if show.marketing %}
@@ -1010,28 +1099,6 @@
   </section>
   {% endif %}
 
-  <!-- ══════════════════════════════════════════════════════════ -->
-  <!-- 10b. UPCOMING EVENT ANNOUNCEMENT                           -->
-  <!-- ══════════════════════════════════════════════════════════ -->
-  {% if show.announcements %}
-  <section class="sec-announcements">
-    <div class="section-header">
-      <h2 class="section-title">Upcoming Event <span>Announcement</span></h2>
-      <div class="section-icon"><img src="{{ icon_events }}" alt=""></div>
-    </div>
-    <div class="announcements-grid">
-      {% for announcement in announcements %}
-      <div class="announcement-card">
-        <img src="{{ announcement.image_url }}" alt="{{ announcement.name }}">
-      </div>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
-
-  <!-- ══════════════════════════════════════════════════════════ -->
-  <!-- 11. FOOTER                                                 -->
-  <!-- ══════════════════════════════════════════════════════════ -->
   <footer class="nl-footer">
     <div class="footer-left">
       <div class="footer-address">{{ footer.address }}</div>

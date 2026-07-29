@@ -143,7 +143,11 @@ FIELD_SECTION = {
     "opening":                "openings",
     "new_openings_sheet":     "openings",
     "blog1": "marketing", "blog2": "marketing",
+    "marketing_highlights":   "marketing",
     "new_announcement":       "announcements",
+    "expo":                   "expo",
+    "employee_training":      "training",
+    "employee_workshop":      "workshop",
 }
 
 
@@ -331,7 +335,18 @@ ROW_DATA_FOLDERS = {
     "certification":      "certification",
     "announcement":       "announcement",
     "blogs":              "marketing/blogs",
+    "expo":               "expo",
+    "training":           "training",
+    "workshop":           "workshop",
 }
+
+# Photo-gallery sections that are just a title plus a folder of pictures.
+# (data key, sheet field, Row Data folder, label)
+GALLERY_SECTIONS = [
+    ("expo",     "expo",                "expo",     "Expo / Exhibition"),
+    ("training", "employee_training",   "training", "Employee Training"),
+    ("workshop", "employee_workshop",   "workshop", "Employee Workshop"),
+]
 
 
 def local_ref(p: Path) -> str:
@@ -615,6 +630,18 @@ def resolve_all_images(data: dict):
         elif ROW_DATA_DIR is not None:
             print(f"    {key}: none - add images to Row Data/{ROW_DATA_FOLDERS[folder_key]}")
 
+    # Photo galleries — Expo / Training / Workshop, each just a folder.
+    for key, _field, folder, label in GALLERY_SECTIONS:
+        gallery = data.setdefault(key, {"title": "", "photos": []})
+        raw = gallery.pop("_photos_raw", "")
+        found = files_from_local_path(raw) or local_files(folder)
+        if found:
+            gallery["photos"] = [f["url"] for f in found]
+        elif raw:
+            gallery["photos"] = resolve_folder_urls(raw)
+        print(f"    {key}: {len(gallery['photos'])} photo(s)"
+              f"{' - ' + gallery['title'] if gallery['title'] else ''}")
+
     # Blog images — a local folder in filename order, one per post.
     posts = data["marketing"]["blog_posts"]
     blog_images = next(
@@ -776,6 +803,44 @@ def parse_anniversaries_from_cell(raw: str) -> list:
     return [{"years": y, "names": names} for y, names in sorted(year_map.items(), reverse=True)]
 
 
+def parse_blogs_from_cell(raw: str) -> list[dict]:
+    """
+    Parse blog posts pasted into a single cell, one per line as
+    'Title<TAB>https://…'. The master sheet has one Marketing Highlights row
+    for all of them, rather than a numbered row per post.
+
+    A bare URL on its own line is accepted too; the title then falls back to
+    the URL's last path segment so the card is never left blank.
+    """
+    posts = []
+    for line in str(raw or "").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        title, url = line, ""
+        for sep in ("\t", "|", ";"):
+            if sep in line:
+                title, _, url = line.partition(sep)
+                break
+        else:
+            # No separator: either a bare URL, or "Title http://…".
+            m = re.match(r"^(.*?)\s*(https?://\S+)$", line)
+            if m:
+                title, url = m.group(1), m.group(2)
+            elif line.startswith("http"):
+                title, url = "", line
+        title, url = title.strip(), url.strip()
+        if not url and title.startswith("http"):
+            title, url = "", title
+        if not url:
+            print(f"  WARNING: skipping blog line (no link): {line!r}")
+            continue
+        if not title:
+            title = url.rstrip("/").rsplit("/", 1)[-1].replace("-", " ").title()
+        posts.append({"title": title, "url": url, "image_url": ""})
+    return posts
+
+
 def parse_openings_from_cell(raw: str) -> list[dict]:
     """
     Parse open positions pasted into the sheet's Extra column, one per line:
@@ -898,6 +963,10 @@ def parse_content_sheet(wb: openpyxl.Workbook) -> dict:
             "hr_wellness_banner": "",
         },
         "footer": FOOTER,
+        # Title + photos each; see GALLERY_SECTIONS.
+        "expo":     {"title": "", "photos": []},
+        "training": {"title": "", "photos": []},
+        "workshop": {"title": "", "photos": []},
         # Sections explicitly marked NA in the sheet; consumed by generate.py.
         "_na_sections": set(),
     }
@@ -908,12 +977,46 @@ def parse_content_sheet(wb: openpyxl.Workbook) -> dict:
     _legacy_hr_event_title = ""    # merges old single-event hr_event_title field
     _legacy_event_photos_raw: list = []  # merges old single-event event_photo rows
 
+    # The master sheet everyone fills in reads
+    #   Sr No. | Newsletter Sections | POC | Content | Photos Folder | Field
+    # so the machine-readable bits sit to the right of the human-readable ones.
+    # Detected by its header, and remapped onto the same (field, value, folder)
+    # the original layout uses, so one parser serves both.
+    master = None
+    # Scanned generously: the master sheet carries a block of instructions
+    # above its header, and people add to it.
+    for probe in ws.iter_rows(min_row=1, max_row=25):
+        headers = {cell_str(c.value).lower(): c.column - 1 for c in probe if c.value}
+        if "newsletter sections" in headers and "field" in headers:
+            master = {
+                "field":   headers["field"],
+                "content": headers.get("content", 3),
+                "folder":  headers.get("photos folder", 4),
+                "header_row": probe[0].row,
+            }
+            print(f"  Master-format sheet detected (header row {master['header_row']}).")
+            break
+
     for row in ws.iter_rows():  # Cell objects, not values_only — the Drive Link
                                  # column needs .hyperlink (see below), since a
                                  # cell inserted as "Insert link" with custom
                                  # display text stores the URL only there, not
                                  # in .value.
-        field = cell_str(row[0].value) if row else ""
+        def at(idx):
+            return row[idx] if idx is not None and idx < len(row) else None
+
+        if master:
+            if row[0].row <= master["header_row"]:
+                continue
+            field_cell   = at(master["field"])
+            content_cell = at(master["content"])
+            folder_cell  = at(master["folder"])
+            field = cell_str(field_cell.value) if field_cell else ""
+            # Content carries both the plain value and any pasted block, so
+            # multi-line entries (anniversaries, openings, blogs) work here too.
+            row = [field_cell, content_cell, content_cell, None, folder_cell]
+        else:
+            field = cell_str(row[0].value) if row else ""
 
         # Skip blank rows, section dividers, legend row
         if not field or field.startswith("▸") or field.lower() == "field":
@@ -928,9 +1031,13 @@ def parse_content_sheet(wb: openpyxl.Workbook) -> dict:
         ):
             data["_na_sections"].add(FIELD_SECTION[field])
 
-        val    = blank_if_na(row[1].value) if len(row) > 1 else None
-        extra  = blank_if_na(row[2].value) if len(row) > 2 else None
-        extra2 = blank_if_na(row[3].value) if len(row) > 3 else None
+        def cell_at(idx):
+            cell = row[idx] if idx < len(row) else None
+            return blank_if_na(cell.value) if cell is not None else None
+
+        val    = cell_at(1)
+        extra  = cell_at(2)
+        extra2 = cell_at(3)
         drive_cell = row[4] if len(row) > 4 else None
         drive = blank_if_na(drive_cell.value) if drive_cell is not None else None
         if (
@@ -1111,13 +1218,27 @@ def parse_content_sheet(wb: openpyxl.Workbook) -> dict:
                 data["_openings_inline"] = cell_str(extra)
 
         # ── Marketing Blogs (blog1, blog2, …) ────────────────────────────
-        elif re.match(r"^blog\d*$", field):
-            if val:
+        elif re.match(r"^blog\d*$", field) or field == "marketing_highlights":
+            text = cell_str(val)
+            if "\n" in text or field == "marketing_highlights":
+                # One cell holding every post, "Title<TAB>URL" per line — the
+                # shape the master sheet uses.
+                for post in parse_blogs_from_cell(text):
+                    post["image_url"] = cell_str(drive)   # resolved later
+                    data["marketing"]["blog_posts"].append(post)
+            elif text:
                 data["marketing"]["blog_posts"].append({
-                    "title":     cell_str(val),
+                    "title":     text,
                     "url":       cell_str(extra),
                     "image_url": cell_str(drive),   # resolved later
                 })
+
+        # ── Photo galleries (Expo / Training / Workshop) ──────────────────
+        elif field in {f for _k, f, _d, _l in GALLERY_SECTIONS}:
+            key = next(k for k, f, _d, _l in GALLERY_SECTIONS if f == field)
+            data[key]["title"] = cell_str(val)
+            if cell_str(drive):
+                data[key]["_photos_raw"] = cell_str(drive)
 
         # ── Anniversary — tab name in Value, Drive file in Drive Link ───────
         elif field == "anniversary":

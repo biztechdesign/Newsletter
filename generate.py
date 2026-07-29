@@ -273,6 +273,8 @@ def build():
     icon_customers   = img_src(ASSETS_DIR / "icon_customers.png")
     icon_events      = img_src(ASSETS_DIR / "icon_events.png")
     icon_certifications = img_src(ASSETS_DIR / "Certificate.png")
+    icon_expo           = img_src(ASSETS_DIR / "icon_expo.png")
+    icon_training       = img_src(ASSETS_DIR / "icon_training.png")
 
     balloon_icons = [
         img_src(ASSETS_DIR / "green-Balloon.png"),
@@ -354,6 +356,9 @@ def build():
         "openings":      bool((data.get("new_openings") or {}).get("positions")),
         "marketing":     bool((data.get("marketing") or {}).get("blog_posts")),
         "announcements": bool(data.get("announcements")),
+        "expo":          bool((data.get("expo") or {}).get("photos")),
+        "training":      bool((data.get("training") or {}).get("photos")),
+        "workshop":      bool((data.get("workshop") or {}).get("photos")),
     }
 
     # A section the sheet marks NA is dropped even when content exists for it,
@@ -384,6 +389,8 @@ def build():
         icon_customers        = icon_customers,
         icon_events           = icon_events,
         icon_certifications   = icon_certifications,
+        icon_expo             = icon_expo,
+        icon_training         = icon_training,
 
         icon_social_linkedin  = icon_social_linkedin,
         icon_social_facebook  = icon_social_facebook,
@@ -430,20 +437,25 @@ def build():
     out_file = OUTPUT_DIR / f"newsletter_{month}_{year}{suffix}.html"
     out_file.write_text(html, encoding="utf-8")
 
+    # Same order as the master sheet everyone fills in, which is also the
+    # order the sections appear in template.html.
     section_labels = [
         ("ceo", "CEO Desk"),
         ("campaign", "Campaign Banner"),
+        ("expo", "Expo / Exhibition"),
         ("new_customers", "Newly Added Customers"),
         ("delivery", "Delivery Insights"),
         ("excellence", "Excellence"),
         ("hr", "HR Insider / Events"),
         ("rewards", "Rewards"),
-        ("certifications", "Employee Certifications"),
-        ("anniversaries", "Anniversaries"),
         ("new_joinees", "New Additions"),
+        ("anniversaries", "Anniversaries"),
+        ("certifications", "Employee Certifications"),
         ("openings", "New Openings"),
-        ("marketing", "Marketing Highlights"),
+        ("training", "Employee Training"),
+        ("workshop", "Employee Workshop"),
         ("announcements", "Upcoming Event Announcement"),
+        ("marketing", "Marketing Highlights"),
     ]
     included = [label for key, label in section_labels if show[key]]
     skipped  = [label for key, label in section_labels if not show[key]]
