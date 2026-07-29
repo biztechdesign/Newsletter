@@ -62,8 +62,12 @@ ROWS = [
     (20, "Marketing Highlights (Blogs, Case Studies…)", "Dhaval",     "marketing_highlights",   "Row Data/marketing/blogs", "One per line: Title <tab> https://link"),
 ]
 
-HEADERS = ["Sr No.", "Newsletter Sections", "POC", "Content", "Photos Folder", "Field"]
-WIDTHS = [8, 42, 16, 62, 26, 24]
+HEADERS = ["Sr No.", "Newsletter Sections", "POC", "Content", "Photos Folder", "Field", "Note"]
+WIDTHS = [8, 42, 16, 62, 26, 24, 40]
+
+# Columns the importer reads; everything else is for people. Note is free text
+# and is never parsed, so anything can be written there without side effects.
+WIRING_COLUMNS = (5, 6)
 
 BLACK = PatternFill("solid", fgColor="000000")
 GREY = PatternFill("solid", fgColor="F2F2F2")
@@ -89,7 +93,7 @@ def build(out_path: Path):
         cell = ws.cell(row=i, column=1, value=note)
         cell.font = Font(bold=(i == 1), size=11 if i == 1 else 9,
                          color="000000" if i == 1 else "555555")
-        ws.merge_cells(start_row=i, start_column=1, end_row=i, end_column=6)
+        ws.merge_cells(start_row=i, start_column=1, end_row=i, end_column=len(HEADERS))
 
     header_row = len(notes) + 2
 
@@ -105,17 +109,17 @@ def build(out_path: Path):
     # ── Rows ──────────────────────────────────────────────────────────────
     for n, (sr, section, poc, field, folder, hint) in enumerate(ROWS):
         r = header_row + 1 + n
-        values = [sr, section, poc, None, folder, field]
+        values = [sr, section, poc, None, folder, field, None]
         for col, value in enumerate(values, start=1):
             cell = ws.cell(row=r, column=col, value=value)
             cell.border = BORDER
             cell.alignment = Alignment(
                 vertical="top",
                 horizontal="center" if col in (1, 3) else "left",
-                wrap_text=col in (2, 4),
+                wrap_text=col in (2, 4, 7),
             )
             # The two wiring columns are not for contributors to edit.
-            if col in (5, 6):
+            if col in WIRING_COLUMNS:
                 cell.fill = GREY
                 cell.font = Font(size=9, color="777777")
         # Guidance hangs off the Content cell as a hover note rather than a

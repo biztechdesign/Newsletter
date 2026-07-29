@@ -39,6 +39,42 @@ RENAMED = {
 DROPPED = {"ceo_photo", "delivery_logo", "excellence_logo", "event_photo"}
 
 
+def read_master(ws) -> tuple[dict, dict]:
+    """
+    ({field: [content, ...]}, {field: note}) from a sheet already in master
+    format. Lets this be re-run without wiping what is already filled in —
+    the alternative is a silent, total data loss on an accidental second run.
+    """
+    header_row = None
+    cols = {}
+    for probe in ws.iter_rows(min_row=1, max_row=25):
+        headers = {str(c.value).strip().lower(): c.column for c in probe if c.value}
+        if "newsletter sections" in headers and "field" in headers:
+            header_row, cols = probe[0].row, headers
+            break
+    if header_row is None:
+        return {}, {}
+
+    content_col = cols.get("content", 4)
+    field_col = cols["field"]
+    note_col = cols.get("note")
+    found: dict[str, list[str]] = {}
+    notes: dict[str, str] = {}
+    for r in range(header_row + 1, ws.max_row + 1):
+        field = str(ws.cell(row=r, column=field_col).value or "").strip()
+        if not field:
+            continue
+        value = ws.cell(row=r, column=content_col).value
+        text = str(value).strip() if value is not None else ""
+        if text:
+            found.setdefault(field, []).append(text)
+        if note_col:
+            note = ws.cell(row=r, column=note_col).value
+            if note is not None and str(note).strip():
+                notes[field] = str(note).strip()
+    return found, notes
+
+
 def read_old(path: Path) -> dict:
     """{field: [content, ...]} from an old-format sheet, in row order."""
     wb = openpyxl.load_workbook(path)
@@ -87,7 +123,16 @@ def main():
     if not target.is_file():
         raise SystemExit(f"Not found: {target}")
 
-    old = read_old(target)
+    wb_in = openpyxl.load_workbook(target)
+    already, notes = read_master(wb_in[wb_in.sheetnames[0]])
+    if already or notes:
+        print("  Sheet is already in master format - refreshing it and keeping "
+              "the Content and Note already filled in.")
+        old = already
+    else:
+        old = read_old(target)
+        notes = {}
+
     backup = target.with_suffix(".old.xlsx")
     shutil.copy(target, backup)
 
@@ -115,6 +160,13 @@ def main():
         ws.cell(row=r, column=4).value = values[i]
         used[field] = i + 1
         carried.append(f"{field}: {values[i].splitlines()[0][:46]}")
+
+    # Notes are per-field, so they survive a refresh alongside the content.
+    note_col = len(ws[header_row])
+    for r in range(header_row + 1, ws.max_row + 1):
+        field = str(ws.cell(row=r, column=6).value or "").strip()
+        if field in notes:
+            ws.cell(row=r, column=7).value = notes[field]
 
     for field, values in old.items():
         left = len(values) - used.get(field, 0)
