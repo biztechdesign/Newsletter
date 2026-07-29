@@ -25,6 +25,7 @@ import sys
 from pathlib import Path
 
 from openpyxl import Workbook
+from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
@@ -37,7 +38,9 @@ ROWS = [
     # the Row Data folder that gets read, and the server folder images upload to.
     ("",  "Newsletter Month",                           "",           "month",                  "",                        "e.g. July"),
     ("",  "Newsletter Year",                            "",           "year",                   "",                        "e.g. 2026"),
-    (1,  "Message from CXO's Desk",                     "Vedanshi",   "ceo_message",            "",                        "The CXO's message, as plain text."),
+    (1,  "Message from CXO's Desk",                     "Vedanshi",   "ceo_message",            "Row Data/ceo",            "The CXO's message. Their photo goes in the folder."),
+    ("",  "   ↳ CXO Name",                          "Vedanshi",   "ceo_name",               "",                        "Rarely changes, e.g. Maulik Shah"),
+    ("",  "   ↳ CXO Title",                         "Vedanshi",   "ceo_title",              "",                        "Rarely changes, e.g. Founder & CEO"),
     (2,  "ISMS Incident Awareness Banner",              "Pratik",     "campaign_banner",        "Row Data/campaign_banner", "Banner image goes in the folder. Leave blank, or NA to drop."),
     (3,  "Monthly Company Expo/Exhibition Photos",      "Parth Pandya", "expo",                 "Row Data/expo",            "Optional heading. Photos go in the folder."),
     (4,  "New Logos Added (New Clients/Projects)",      "Pratik",     "new_customer",           "Row Data/new_customer",    "Logos go in the folder, any filenames."),
@@ -62,7 +65,7 @@ ROWS = [
 HEADERS = ["Sr No.", "Newsletter Sections", "POC", "Content", "Photos Folder", "Field"]
 WIDTHS = [8, 42, 16, 62, 26, 24]
 
-YELLOW = PatternFill("solid", fgColor="FFFF00")
+BLACK = PatternFill("solid", fgColor="000000")
 GREY = PatternFill("solid", fgColor="F2F2F2")
 THIN = Side(style="thin", color="999999")
 BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
@@ -93,8 +96,8 @@ def build(out_path: Path):
     # ── Header ────────────────────────────────────────────────────────────
     for col, title in enumerate(HEADERS, start=1):
         cell = ws.cell(row=header_row, column=col, value=title)
-        cell.fill = YELLOW
-        cell.font = Font(bold=True, size=11)
+        cell.fill = BLACK
+        cell.font = Font(bold=True, size=11, color="FFFFFF")
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = BORDER
         ws.column_dimensions[get_column_letter(col)].width = WIDTHS[col - 1]
@@ -115,18 +118,14 @@ def build(out_path: Path):
             if col in (5, 6):
                 cell.fill = GREY
                 cell.font = Font(size=9, color="777777")
-        # The hint lives in the cell comment, so it doesn't look like content
-        # and disappears the moment someone types over it.
-        ws.cell(row=r, column=4).comment = None
-        ws.cell(row=r, column=2).value = section
+        # Guidance hangs off the Content cell as a hover note rather than a
+        # column of its own — it stays available without adding a column
+        # people have to read past, and it leaves the cell genuinely empty
+        # (empty is what "no content this month" means to the importer).
+        note = Comment(hint, "Newsletter")
+        note.width, note.height = 320, 60
+        ws.cell(row=r, column=4).comment = note
         ws.row_dimensions[r].height = 30
-        # Placeholder guidance in a note column beyond the used range keeps the
-        # Content cell genuinely empty (an empty cell is what "no content"
-        # means to the importer).
-        note_cell = ws.cell(row=r, column=8, value=hint)
-        note_cell.font = Font(size=9, italic=True, color="888888")
-    ws.column_dimensions["H"].width = 60
-    ws.cell(row=header_row, column=8, value="What to put in Content").font = Font(bold=True, size=9, color="888888")
 
     # Nudge people toward NA rather than inventing their own wording.
     dv = DataValidation(type="list", formula1='"NA"', allow_blank=True, showDropDown=False)
