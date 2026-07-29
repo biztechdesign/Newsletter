@@ -1,274 +1,180 @@
 {
-  "month": "January",
+  "month": "July",
   "year": "2026",
   "ceo_desk": {
+    "message": "Every new quarter is a reminder that progress isn't defined by where we begin, but by the choices we make every day. Let's challenge ourselves to think bigger, embrace change with confidence, and turn every opportunity into meaningful growth. Together, let's build a quarter we'll be proud to look back on.",
     "ceo_name": "Maulik Shah",
-    "ceo_title": "Founder & CEO",
-    "message": "As we move toward the close of the year, I find myself feeling both full and grateful—full of memories, and grateful for the people who made them possible.\nBiztech Spectra 2025 was a proud highlight—celebrating our people, our achievements, and the values that unite us. I am grateful for all that 2025 has brought us and excited to begin the new year together—driven by innovation, opportunity, and shared purpose."
+    "ceo_title": "Founder & CEO"
   },
   "delivery_insights": [
     {
-      "description": "We are pleased to announce the successful go-live of the Alliance Calibrations Group (ACG) platform migration from v16 to v19. They appreciated our teams' diligent efforts in ensuring a seamless and compliant transition.",
-      "logo_url": "https://biztechdesign.github.io/Newsletter/images/delivery/acg_logo.png"
+      "description": "",
+      "logo_url": ""
     }
   ],
   "acknowledging_excellence": [
     {
       "client_label": "",
-      "testimonial": "I want to mention that we successfully completed the server migration. Sarvil and Milan are gold for me!",
-      "logo_url": "https://biztechdesign.github.io/Newsletter/images/excellence/client1.png"
+      "testimonial": "",
+      "logo_url": ""
     },
     {
       "client_label": "",
-      "testimonial": "Our client CG Control rated us highly for communication and timely delivery, giving a 10/10 for both! Special shoutout to Prakash Bambhania for going above and beyond, even during off-hours. The client appreciated our structured approach and suggested we boost turnaround speed. Great work, team! 👏",
-      "logo_url": "https://biztechdesign.github.io/Newsletter/images/excellence/client2.png"
+      "testimonial": "",
+      "logo_url": ""
     }
   ],
   "hr": {
     "events": [
       {
-        "title": "Equality Day Celebration",
-        "photos": [
-          "https://biztechdesign.github.io/Newsletter/images/events/event1/event_01.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event1/event_02.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event1/event_03.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event1/event_04.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event1/event_05.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event1/event_06.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event1/event_07.png",
-          "https://biztechdesign.github.io/Newsletter/images/events/event1/event_08.png",
-          "https://biztechdesign.github.io/Newsletter/images/events/event1/event_09.png"
-        ]
+        "title": "",
+        "photos": []
       },
       {
-        "title": "Employee Engagement Activities",
-        "photos": [
-          "https://biztechdesign.github.io/Newsletter/images/events/event2/IMG_1110-1.png",
-          "https://biztechdesign.github.io/Newsletter/images/events/event2/IMG_1110-2.png",
-          "https://biztechdesign.github.io/Newsletter/images/events/event2/IMG_1110-3.png",
-          "https://biztechdesign.github.io/Newsletter/images/events/event2/IMG_1110-4.png",
-          "https://biztechdesign.github.io/Newsletter/images/events/event2/IMG_1110-5.png",
-          "https://biztechdesign.github.io/Newsletter/images/events/event2/IMG_1110-6.png",
-          "https://biztechdesign.github.io/Newsletter/images/events/event2/IMG_1110.png"
-        ]
+        "title": "",
+        "photos": []
       },
       {
-        "title": "Other Celebration",
-        "photos": [
-          "https://biztechdesign.github.io/Newsletter/images/events/event3/business-team-celebrating-success.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event3/close-up-hand-taking-photos-with-smartphone.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event3/group-people-are-celebrating-with-balloons-one-them-is-wearing-suit.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event3/man-suit-is-celebrating-with-cake-balloons-background.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event3/medium-shot-happy-people-celebrating-office.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event3/medium-shot-happy-people-celebrating.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event3/medium-shot-woman-receiving-gift.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event3/person-celebrating-birthday-office (1).jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event3/person-celebrating-birthday-office.jpg",
-          "https://biztechdesign.github.io/Newsletter/images/events/event3/that-s-how-success-looks-like-photo-young-team-classical-clothes-celebrating-success-while-holding-drinks-modern-good-lighted-office.jpg"
-        ]
-      }
-    ],
-    "wellness_title": "Wellness & HR Corner"
-  },
-  "rewards": {
-    "awards": [
-      {
-        "title": "Appreciation Award",
-        "folder": "",
-        "recipients": [
-          {
-            "name": "Lopa Joshi",
-            "designation": "Sr.UI_UX Designer",
-            "image_url": "https://biztechdesign.github.io/Newsletter/images/awards/01--Appreciation Award--Lopa Joshi--Sr.UI_UX Designer.jpg"
-          }
-        ]
-      },
-      {
-        "title": "Spotlight Award",
-        "folder": "",
-        "recipients": [
-          {
-            "name": "Nawabhusen Solanki",
-            "designation": "Business Development Executive",
-            "image_url": "https://biztechdesign.github.io/Newsletter/images/awards/02--Spotlight Award--Nawabhusen Solanki--Business Development Executive.png"
-          }
-        ]
-      },
-      {
-        "title": "Project Excellence Award",
-        "folder": "",
-        "recipients": [
-          {
-            "name": "Dynamics Palm Desert",
-            "designation": "",
-            "image_url": "https://biztechdesign.github.io/Newsletter/images/awards/03--Project Excellence Award--Dynamics Palm Desert.png"
-          }
-        ]
-      },
-      {
-        "title": "Team Spirit Award",
-        "folder": "",
-        "recipients": [
-          {
-            "name": "Heema Patel",
-            "designation": "Odoo Consultant",
-            "image_url": "https://biztechdesign.github.io/Newsletter/images/awards/04--Team Spirit Award--Heema Patel--Odoo Consultant.png"
-          },
-          {
-            "name": "Pooja Dahale",
-            "designation": "Sr. Odoo Functional Consultant",
-            "image_url": "https://biztechdesign.github.io/Newsletter/images/awards/04--Team Spirit Award--Pooja Dahale--Sr. Odoo Functional Consultant.png"
-          },
-          {
-            "name": "Uttam Jain",
-            "designation": "Lead Odoo Consultant",
-            "image_url": "https://biztechdesign.github.io/Newsletter/images/awards/04--Team Spirit Award--Uttam Jain--Lead Odoo Consultant.png"
-          }
-        ]
+        "title": "",
+        "photos": []
       }
     ]
   },
+  "rewards": {
+    "awards": []
+  },
   "anniversaries": [
     {
-      "years": 12,
+      "years": 13,
       "names": [
-        "Chaitali Chokshi"
+        "Viral savaj"
+      ]
+    },
+    {
+      "years": 11,
+      "names": [
+        "Tushar Avugandey -office boy",
+        "Bhamini Prajapati"
+      ]
+    },
+    {
+      "years": 10,
+      "names": [
+        "Dhaval Panara"
+      ]
+    },
+    {
+      "years": 7,
+      "names": [
+        "Dhvani Prajapati",
+        "Tushar Jadav",
+        "Ghanshyam Bhilavala",
+        "Rishabh Rana"
+      ]
+    },
+    {
+      "years": 6,
+      "names": [
+        "Adil Dhada",
+        "Vipul Vasava",
+        "Dhruvi Parmar",
+        "Vaibhav Shah",
+        "Shaikh Mo. Zaid Mo. Sharif"
+      ]
+    },
+    {
+      "years": 5,
+      "names": [
+        "Sehal Bansal",
+        "Shyam Kamani",
+        "Vishal Parmar",
+        "Akshaykumar Dake"
       ]
     },
     {
       "years": 4,
       "names": [
-        "Lopa Joshi"
+        "Vaibhav Sathwara",
+        "Gaurav Siddhapathaki",
+        "Sahil Dalsaniya",
+        "Hard Dharajiya",
+        "Hemant Varvariya",
+        "Jignesh Dhandhukiya",
+        "Anil Luhar",
+        "Anjana Gajjar",
+        "Kiran Nandaniya"
       ]
     },
     {
       "years": 3,
       "names": [
-        "Heta Makadiya"
+        "Amisha Darji",
+        "Vatsal Solanki",
+        "Mansi Mistry",
+        "Rahul Pranami",
+        "Nidhi Rajput"
       ]
     },
     {
       "years": 2,
       "names": [
-        "Devik Gondaliya"
-      ]
-    },
-    {
-      "years": 1,
-      "names": [
-        "Meet Patni",
-        "Isha Andhariya",
-        "Aniket Chauhan",
-        "Khushboo Rathod"
+        "Nilesh Negi"
       ]
     }
   ],
   "new_joinees": [
     {
-      "name": "Lalit Kumar Sharma",
-      "designation": "Senior DevOps Engineer",
-      "image_url": "https://biztechdesign.github.io/Newsletter/images/new_joinee/Lalit Kumar Sharma--Senior DevOps Engineer.png"
-    },
-    {
-      "name": "Mihir Sharma",
-      "designation": "Senior Business Development Executive",
-      "image_url": "https://biztechdesign.github.io/Newsletter/images/new_joinee/Mihir Sharma--Senior Business Development Executive.png"
-    },
-    {
-      "name": "Nirzar Nayi",
+      "name": "Advait Solanki",
       "designation": "Business Development Intern",
-      "image_url": "https://biztechdesign.github.io/Newsletter/images/new_joinee/Nirzar Nayi--Business Development Intern.png"
+      "image_url": "../July-2026/Row%20Data/new_joinee/Advait%20Solanki%20-%20Business%20Development%20Intern.jpeg"
     },
     {
-      "name": "Saumya Jani",
-      "designation": "Business Development Intern",
-      "image_url": "https://biztechdesign.github.io/Newsletter/images/new_joinee/Saumya Jani--Business Development Intern.png"
+      "name": "Arpi Shah",
+      "designation": "Sales Automation Analyst",
+      "image_url": "../July-2026/Row%20Data/new_joinee/Arpi%20Shah%20-%20Sales%20Automation%20Analyst.jpeg"
+    },
+    {
+      "name": "Vraj Patel",
+      "designation": "Digital Marketing Executive",
+      "image_url": "../July-2026/Row%20Data/new_joinee/Vraj%20Patel%20-%20Digital%20Marketing%20Executive.jpeg"
     }
   ],
-  "new_customers": [
-    {
-      "name": "customer1",
-      "image_url": "https://biztechdesign.github.io/Newsletter/images/new_customer/customer1.png"
-    },
-    {
-      "name": "customer2",
-      "image_url": "https://biztechdesign.github.io/Newsletter/images/new_customer/customer2.png"
-    },
-    {
-      "name": "customer3",
-      "image_url": "https://biztechdesign.github.io/Newsletter/images/new_customer/customer3.png"
-    }
-  ],
+  "new_customers": [],
   "announcements": [
     {
-      "name": "image-1",
-      "image_url": "https://biztechdesign.github.io/Newsletter/images/announcement/image-1.png"
-    },
-    {
-      "name": "image",
-      "image_url": "https://biztechdesign.github.io/Newsletter/images/announcement/image.png"
+      "name": "Independence Day Celebration -1",
+      "image_url": "../July-2026/Row%20Data/announcement/Independence%20Day%20Celebration%20-1.png"
     }
   ],
-  "certifications": [
-    {
-      "name": "certificate1",
-      "image_url": "https://biztechdesign.github.io/Newsletter/images/certification/certificate1.png"
-    }
-  ],
+  "certifications": [],
   "new_openings": {
     "positions": [
       {
         "title": "SEO Executive",
-        "openings": 1,
-        "experience": "Fresher"
+        "experience": "Fresher",
+        "openings": 1
       },
       {
         "title": "Business Development Executive",
-        "openings": 2,
-        "experience": "2+ years"
+        "experience": "2+ years",
+        "openings": 2
       },
       {
         "title": "System Administrator",
-        "openings": 1,
-        "experience": "2+ years"
-      },
-      {
-        "title": "Digital Marketing Executive",
-        "openings": 3,
-        "experience": "1+ years"
-      },
-      {
-        "title": "Frontend Developer",
-        "openings": 2,
-        "experience": "1+ years"
-      },
-      {
-        "title": "Mobile App Developer",
-        "openings": 1,
-        "experience": "5+ years"
+        "experience": "2+ years",
+        "openings": 1
       }
     ],
     "view_all_url": "https://www.biztechcs.com/career/"
   },
   "marketing": {
-    "blog_posts": [
-      {
-        "title": "Custom AI Chatbot Development: How It Works, What It Costs & When to Build One",
-        "url": "https://www.biztechcs.com/blog/custom-ai-chatbot-development-works-costs-build/",
-        "image_url": "https://biztechdesign.github.io/Newsletter/images/marketing/blogs/blog1.jpg"
-      },
-      {
-        "title": "How a Fintech Company Automated 70% of Customer Queries Using a Custom GenAI Chatbot",
-        "url": "https://www.biztechcs.com/blog/fintech-genai-chatbot-to-automating-customer-queries/",
-        "image_url": "https://biztechdesign.github.io/Newsletter/images/marketing/blogs/blog2.jpg"
-      }
-    ],
+    "blog_posts": [],
     "view_all_url": "https://www.biztechcs.com/blog/"
   },
   "image_urls": {
-    "ceo_photo": "https://biztechdesign.github.io/Newsletter/images/ceo/ceo_photo.jpg",
-    "campaign_banner": "https://biztechdesign.github.io/Newsletter/images/campaign_banner/banner.jpg",
-    "hr_wellness_banner": "https://biztechdesign.github.io/Newsletter/images/hr_wellness/wellness_banner.jpg"
+    "ceo_photo": "../July-2026/Row%20Data/ceo/Maulik03-1.png",
+    "campaign_banner": "../July-2026/Row%20Data/campaign_banner/ChatGPT%20Image%20Jul%2029%2C%202026%2C%2011_22_34%20AM.png",
+    "hr_wellness_banner": ""
   },
   "footer": {
     "address": "C/801 Dev Aurum Commercial, Anandnagar Cross Road Prahalad Nagar, Satellite, Ahmedabad, Gujarat 380015",
@@ -282,5 +188,18 @@
       "twitter": "https://twitter.com/biztechcs",
       "dribbble": "https://dribbble.com/biztechcs"
     }
-  }
+  },
+  "expo": {
+    "title": "",
+    "photos": []
+  },
+  "training": {
+    "title": "",
+    "photos": []
+  },
+  "workshop": {
+    "title": "",
+    "photos": []
+  },
+  "_na_sections": []
 }

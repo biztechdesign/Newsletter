@@ -6,6 +6,13 @@ output/
 # they can still be committed if you want them backed up in git.
 */Section wise images/
 
+# Excel's lock file, created while a workbook is open
+~$*
+
+# Backups written by migrate_to_master.py
+*.old.xlsx
+*.xlsx.bak
+
 __pycache__/
 *.pyc
 
