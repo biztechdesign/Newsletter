@@ -37,6 +37,7 @@ import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
+from urllib.parse import quote
 
 import openpyxl
 
@@ -282,16 +283,68 @@ ROW_DATA_FOLDERS = {
 }
 
 
+def local_ref(p: Path) -> str:
+    """
+    How the rendered HTML should reference a local image.
+
+    Relative to output/, where the HTML is written — NOT an absolute file://
+    URI. The preview is served over http://127.0.0.1 by watch.py, and browsers
+    refuse to load file:// subresources from an http:// page, so absolute URIs
+    render as broken images there while working fine when opened from disk.
+    A relative path works both ways. Spaces and the like are percent-encoded,
+    since 'Row Data' and most photo names contain them.
+    """
+    resolved = p.resolve()
+    try:
+        rel = resolved.relative_to(BASE_DIR).as_posix()
+    except ValueError:
+        return resolved.as_uri()   # outside the project; nothing better available
+    return "../" + quote(rel)
+
+
+def browser_renderable(p: Path) -> bool:
+    """
+    Whether a browser can actually decode this file, judged by its leading
+    bytes rather than its extension.
+
+    Phones shoot HEIC, and renaming one to .png does not convert it — the file
+    then passes every extension check, uploads fine, and shows up as a broken
+    image in the finished newsletter with nothing to explain why. Cheap to
+    catch here, painful to catch by eye later.
+    """
+    if p.suffix.lower() == ".svg":
+        return True
+    try:
+        head = p.read_bytes()[:16]
+    except OSError:
+        return False
+    if head[:8] == b"\x89PNG\r\n\x1a\n":                     # PNG
+        return True
+    if head[:3] == b"\xff\xd8\xff":                          # JPEG
+        return True
+    if head[:6] in (b"GIF87a", b"GIF89a"):                   # GIF
+        return True
+    if head[:4] == b"RIFF" and head[8:12] == b"WEBP":        # WebP
+        return True
+    if head[4:8] == b"ftyp" and head[8:12] in (b"avif", b"avis"):
+        return True
+    return False
+
+
 def files_in(folder: Path) -> list[dict]:
     """[{name, stem, url}] for images directly inside *folder*, sorted by name."""
     if not folder.is_dir():
         return []
-    found = [
-        {"name": p.name, "stem": p.stem, "url": p.resolve().as_uri()}
-        for p in folder.iterdir()
-        if p.is_file() and p.suffix.lower() in IMAGE_EXTS
-    ]
-    return sorted(found, key=lambda x: x["name"])
+    found = []
+    for p in sorted(folder.iterdir(), key=lambda x: x.name):
+        if not p.is_file() or p.suffix.lower() not in IMAGE_EXTS:
+            continue
+        if not browser_renderable(p):
+            print(f"  WARNING: '{p.name}' is not a real {p.suffix.lstrip('.').upper()} "
+                  f"(looks like HEIC or similar) - skipping; convert it to PNG/JPEG.")
+            continue
+        found.append({"name": p.name, "stem": p.stem, "url": local_ref(p)})
+    return found
 
 
 def files_from_local_path(raw: str) -> list[dict]:
