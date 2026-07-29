@@ -282,15 +282,8 @@ ROW_DATA_FOLDERS = {
 }
 
 
-def local_files(subfolder: str) -> list[dict]:
-    """
-    [{name, stem, url}] for the images in a Row Data subfolder, sorted by name
-    so numeric filename prefixes control display order. Empty if this month has
-    no local folder, or that section's folder is missing or has no images.
-    """
-    if ROW_DATA_DIR is None:
-        return []
-    folder = ROW_DATA_DIR / subfolder
+def files_in(folder: Path) -> list[dict]:
+    """[{name, stem, url}] for images directly inside *folder*, sorted by name."""
     if not folder.is_dir():
         return []
     found = [
@@ -299,6 +292,42 @@ def local_files(subfolder: str) -> list[dict]:
         if p.is_file() and p.suffix.lower() in IMAGE_EXTS
     ]
     return sorted(found, key=lambda x: x["name"])
+
+
+def files_from_local_path(raw: str) -> list[dict]:
+    """
+    Images from a folder named directly in the sheet's Drive Link cell, e.g.
+    'Row Data/ceo'. Anything starting with http is a URL, not a path, and is
+    left for the GitHub/Drive resolvers.
+
+    Resolved against the month folder first, then the project root, so both
+    'Row Data/ceo' and 'July-2026/Row Data/ceo' work, as does an absolute path.
+    """
+    if not raw or raw.startswith("http"):
+        return []
+    candidate = Path(raw.replace("\\", "/"))
+    if candidate.is_absolute():
+        return files_in(candidate)
+    roots = []
+    if ROW_DATA_DIR is not None:
+        roots.append(ROW_DATA_DIR.parent)   # the "<Month>-<Year>" folder
+    roots.append(BASE_DIR)
+    for root in roots:
+        found = files_in(root / candidate)
+        if found:
+            return found
+    return []
+
+
+def local_files(subfolder: str) -> list[dict]:
+    """
+    [{name, stem, url}] for the images in a Row Data subfolder, sorted by name
+    so numeric filename prefixes control display order. Empty if this month has
+    no local folder, or that section's folder is missing or has no images.
+    """
+    if ROW_DATA_DIR is None:
+        return []
+    return files_in(ROW_DATA_DIR / subfolder)
 
 
 def github_folder_files(folder_url: str) -> list[dict]:
@@ -371,12 +400,12 @@ def resolve_all_images(data: dict):
 
     # Single-image sections — first file in the folder wins
     for key in ["ceo_photo", "campaign_banner", "hr_wellness_banner"]:
-        found = local_files(ROW_DATA_FOLDERS[key])
+        raw = img.get(key, "")
+        found = files_from_local_path(raw) or local_files(ROW_DATA_FOLDERS[key])
         if found:
             img[key] = found[0]["url"]
-            print(f"    {key}: Row Data/{ROW_DATA_FOLDERS[key]}/{found[0]['name']}")
+            print(f"    {key}: {found[0]['name']} (local)")
             continue
-        raw = img.get(key, "")
         img[key] = resolve_single_url(raw) if raw else ""
         print(f"    {key}: {img[key][:80] if img[key] else '(not found)'}")
 
@@ -385,7 +414,11 @@ def resolve_all_images(data: dict):
     for section, folder_key in (("delivery_insights", "delivery"),
                                 ("acknowledging_excellence", "excellence")):
         entries = data.get(section, [])
-        logos = local_files(ROW_DATA_FOLDERS[folder_key])
+        # A local folder path on any of the rows applies to the whole section.
+        logos = next(
+            (f for e in entries if (f := files_from_local_path(e.get("logo_url", "")))),
+            [],
+        ) or local_files(ROW_DATA_FOLDERS[folder_key])
         for i, entry in enumerate(entries):
             if i < len(logos):
                 entry["logo_url"] = logos[i]["url"]
@@ -398,7 +431,10 @@ def resolve_all_images(data: dict):
     # rows by order.
     for n, event in enumerate(data.get("hr", {}).get("events", []), start=1):
         raws = event.pop("_photos_raw", [])
-        found = local_files(f"events/event{n}")
+        found = next(
+            (f for raw in raws if (f := files_from_local_path(raw))),
+            [],
+        ) or local_files(f"events/event{n}")
         if found:
             event["photos"] = [f["url"] for f in found]
             continue
@@ -435,21 +471,27 @@ def resolve_all_images(data: dict):
 
         sheet_folders = data.pop(sheet_key, [])
 
-        found = local_files(ROW_DATA_FOLDERS[folder_key])
+        # A local folder path in the sheet wins; otherwise the conventional one.
+        found = next(
+            (f for raw in sheet_folders if (f := files_from_local_path(raw))),
+            [],
+        ) or local_files(ROW_DATA_FOLDERS[folder_key])
         if found:
             parsed = parser(found)
             if parsed:
                 container[key] = parsed
-                print(f"    {key}: {len(parsed)} {label} from Row Data/{ROW_DATA_FOLDERS[folder_key]}")
+                print(f"    {key}: {len(parsed)} {label} from local folder")
                 continue
 
-        if sheet_folders:
-            for folder_url in sheet_folders:
-                parsed = parser(github_folder_files(folder_url))
-                if parsed:
-                    container[key] = parsed
-                    print(f"    {key}: {len(parsed)} {label} from GitHub")
-                    break
+        matched = False
+        for folder_url in sheet_folders:
+            parsed = parser(github_folder_files(folder_url))
+            if parsed:
+                container[key] = parsed
+                print(f"    {key}: {len(parsed)} {label} from GitHub")
+                matched = True
+                break
+        if matched:
             continue
 
         # No folder either side — resolve whatever per-row links exist.
@@ -469,8 +511,12 @@ def resolve_all_images(data: dict):
         elif ROW_DATA_DIR is not None:
             print(f"    {key}: none - add images to Row Data/{ROW_DATA_FOLDERS[folder_key]}")
 
-    # Blog images — Row Data/marketing/blogs in filename order, one per post.
-    blog_images = local_files(ROW_DATA_FOLDERS["blogs"])
+    # Blog images — a local folder in filename order, one per post.
+    posts = data["marketing"]["blog_posts"]
+    blog_images = next(
+        (f for p in posts if (f := files_from_local_path(p.get("image_url", "")))),
+        [],
+    ) or local_files(ROW_DATA_FOLDERS["blogs"])
 
     # Otherwise: if multiple blogs share a folder URL, assign images by index
     folder_cache: dict[str, list[str]] = {}
