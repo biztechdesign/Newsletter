@@ -384,7 +384,9 @@
     background: #fff;
     border: 1.5px solid #FFF2D9;
     border-radius: 10px;
-    padding: 18px 22px;
+    /* Narrow side padding buys ~24px of line width, which is what keeps the
+       longest names on a single line at this font size. */
+    padding: 18px 10px;
     position: relative;
     overflow: visible;
   }
@@ -422,11 +424,16 @@
     letter-spacing: 0.5px;
   }
   .anniv-name {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 700;
     color: #1a1a1a;
     margin-top: 8px;
-    line-height: 1.5;
+    line-height: 1.6;
+  }
+  /* Each name stays on one line — a wrapped name reads as two people. */
+  .anniv-name span {
+    display: block;
+    white-space: nowrap;
   }
   .balloon {
     position: absolute;
@@ -906,7 +913,7 @@
           <span class="anniv-years-label">{{ "Year" if group.years == 1 else "Years" }}</span>
         </div>
         <div class="anniv-name">
-          {% for name in group.names %}{{ name }}{% if not loop.last %}<br>{% endif %}{% endfor %}
+          {% for name in group.names %}<span>{{ name }}</span>{% endfor %}
         </div>
       </div>
       {% endfor %}

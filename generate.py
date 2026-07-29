@@ -14,7 +14,6 @@ import logging
 import os
 import sys
 import base64
-import hashlib
 import mimetypes
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
@@ -183,24 +182,32 @@ def parse_certifications_from_images(folder: Path) -> list[dict]:
 # Balloon decoration for Work Anniversary cards — cycles through the 4 colors
 # and a handful of corner positions, deterministically per card (based on the
 # card's own content) so re-generating the newsletter doesn't reshuffle them.
+# One balloon per card, always on the top-right corner. The colour still
+# varies per card; only the position is fixed. (This used to rotate through
+# five positions, which scattered balloons around and across the cards.)
 BALLOON_POSITIONS = [
-    {"top": "-16px", "right": "18px"},
-    {"top": "-16px", "left": "-14px"},
-    {"top": "-16px", "right": "-14px"},
-    {"bottom": "-16px", "right": "18px"},
-    {"bottom": "-16px", "left": "18px"},
+    {"top": "-18px", "right": "14px"},
 ]
 
 
 def assign_anniversary_balloons(anniversaries: list[dict], balloon_icons: list[str]):
-    """Attach a {icon, style} 'balloon' dict to each anniversary group in place."""
-    for group in anniversaries:
-        key = f"{group.get('years')}|{'|'.join(group.get('names', []))}"
-        h = int(hashlib.md5(key.encode()).hexdigest(), 16)
-        icon = balloon_icons[h % len(balloon_icons)]
-        pos = BALLOON_POSITIONS[(h // len(balloon_icons)) % len(BALLOON_POSITIONS)]
+    """
+    Attach a {icon, style} 'balloon' dict to each anniversary group in place.
+
+    Colours cycle by position rather than being picked from a hash of the
+    names. There are only four balloon images, so with more cards than that
+    some colour must repeat — but cycling guarantees neighbours never match,
+    left-to-right or top-to-bottom in the three-column grid, which hashing
+    could not (it happily gave two adjacent cards the same colour).
+    """
+    icons = [i for i in balloon_icons if i]
+    for n, group in enumerate(anniversaries):
+        pos = BALLOON_POSITIONS[n % len(BALLOON_POSITIONS)]
         style = ";".join(f"{k}:{v}" for k, v in pos.items())
-        group["balloon"] = {"icon": icon, "style": style}
+        group["balloon"] = {
+            "icon": icons[n % len(icons)] if icons else "",
+            "style": style,
+        }
 
 
 def parse_awards_from_images(folder: Path) -> tuple[list[dict], list[list[str]]]:

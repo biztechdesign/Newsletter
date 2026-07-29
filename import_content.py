@@ -688,6 +688,43 @@ def parse_anniversaries(wb: openpyxl.Workbook, sheet_name: str) -> list:
     return [{"years": y, "names": names} for y, names in sorted(year_map.items(), reverse=True)]
 
 
+def parse_anniversaries_from_cell(raw: str) -> list:
+    """
+    Parse anniversary data pasted straight into the sheet's Extra column,
+    one person per line as 'Name<TAB>N years':
+
+        Viral savaj      13 years
+        Dhaval Panara    10 years
+
+    Pasting a block from another spreadsheet gives exactly this, so it saves
+    maintaining a separate linked workbook. Comma and semicolon also work as
+    the separator. Returns the same {years, names} grouping as the workbook
+    parser, so the rest of the pipeline can't tell the difference.
+    """
+    year_map: dict[int, list[str]] = {}
+    for line in str(raw or "").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        for sep in ("\t", ";", ","):
+            if sep in line:
+                name, _, tenure = line.partition(sep)
+                break
+        else:
+            # No separator — fall back to splitting off a trailing "12 years".
+            m = re.match(r"^(.*?)\s+(\d+\s*years?)$", line, re.IGNORECASE)
+            if not m:
+                print(f"  WARNING: skipping anniversary line (no name/tenure separator): {line!r}")
+                continue
+            name, tenure = m.group(1), m.group(2)
+        name, years = name.strip(), parse_years(tenure)
+        if not name or years == 0:
+            print(f"  WARNING: skipping anniversary line (no name or year count): {line!r}")
+            continue
+        year_map.setdefault(years, []).append(name)
+    return [{"years": y, "names": names} for y, names in sorted(year_map.items(), reverse=True)]
+
+
 # ── New Openings (external sheet) parser ────────────────────────────────────
 
 def parse_openings_sheet(wb: openpyxl.Workbook, month: str) -> list[dict]:
@@ -973,6 +1010,10 @@ def parse_content_sheet(wb: openpyxl.Workbook) -> dict:
                 data["_anniv_tab"] = tab
             if url and url.startswith("http"):
                 data["_anniv_drive_url"] = url
+            # Names pasted straight into the Extra column, one per line as
+            # "Name<TAB>N years" — used in preference to the linked workbook.
+            if cell_str(extra):
+                data["_anniv_inline"] = cell_str(extra)
 
         # Unknown fields: silently skip
 
@@ -1040,22 +1081,30 @@ def main():
     # ── Step 2: Work Anniversary data ────────────────────────────────────
     anniv_tab       = data.pop("_anniv_tab",       None)
     anniv_drive_url = data.pop("_anniv_drive_url", None)
+    anniv_inline    = data.pop("_anniv_inline",    None)
 
-    # Sheet name to look up — from content sheet row, else construct from month/year
-    sheet_name = anniv_tab or f"{data['month']}-{data['year']}"
-
-    print(f"\nDownloading Work Anniversary file (tab: '{sheet_name}')...")
-    if anniv_drive_url:
-        try:
-            anniv_wb = download_drive_xlsx(anniv_drive_url)
-            print("  Downloaded from Drive link in sheet.")
-        except Exception as e:
-            print(f"  Drive download failed ({e}), falling back to Sheet ID...")
-            anniv_wb = load_xlsx(ANNIV_SHEET_ID, "anniversaries.xlsx")
+    if anniv_inline:
+        # Names typed straight into the sheet win — no download, no linked
+        # workbook, nothing else to keep in sync.
+        print("\nReading Work Anniversary data from the sheet...")
+        anniversaries = parse_anniversaries_from_cell(anniv_inline)
     else:
-        anniv_wb = load_xlsx(ANNIV_SHEET_ID, "anniversaries.xlsx")
+        # Sheet name to look up — from content sheet row, else from month/year
+        sheet_name = anniv_tab or f"{data['month']}-{data['year']}"
 
-    anniversaries = parse_anniversaries(anniv_wb, sheet_name)
+        print(f"\nDownloading Work Anniversary file (tab: '{sheet_name}')...")
+        if anniv_drive_url:
+            try:
+                anniv_wb = download_drive_xlsx(anniv_drive_url)
+                print("  Downloaded from Drive link in sheet.")
+            except Exception as e:
+                print(f"  Drive download failed ({e}), falling back to Sheet ID...")
+                anniv_wb = load_xlsx(ANNIV_SHEET_ID, "anniversaries.xlsx")
+        else:
+            anniv_wb = load_xlsx(ANNIV_SHEET_ID, "anniversaries.xlsx")
+
+        anniversaries = parse_anniversaries(anniv_wb, sheet_name)
+
     data["anniversaries"] = anniversaries
 
     if anniversaries:
