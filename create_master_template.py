@@ -81,13 +81,19 @@ def build(out_path: Path):
     ws.title = "Newsletter Content"
 
     # ── Instructions above the table ──────────────────────────────────────
+    # Everything essential is stated here, in plain cells, because this block
+    # survives being copy-pasted into another sheet while cell comments,
+    # colours and column widths do not.
     notes = [
-        "BIZTECH NEWSLETTER — fill in the Content column only.",
-        "Leave Content blank, or write NA, if a section has nothing this month — it is then left out of the newsletter entirely.",
-        "Photos: drop them into the folder named in 'Photos Folder'. No links needed.",
-        "R & R filenames:      01 - Award Title - Person Name - Designation.jpg   (repeat the title to group people under one award)",
-        "New Joiners filenames: Person Name - Designation.jpg",
-        "Order inside a folder follows the filename, so prefix 01, 02, … where it matters. iPhone HEIC photos must be saved as PNG/JPEG first.",
+        "BIZTECH NEWSLETTER — fill in the Content column only. Leave the grey Photos Folder / Field columns alone.",
+        "Nothing this month? Leave Content blank or write NA — that section is then left out of the newsletter entirely.",
+        "PHOTOS: drop them straight into the folder named in 'Photos Folder'. No links needed. Order follows the filename, so prefix 01, 02, … where it matters.",
+        "        R & R filename:       01 - Award Title - Person Name - Designation.jpg   (repeat the award title to group several people under one award)",
+        "        New Joiners filename: Person Name - Designation.jpg          iPhone HEIC photos must be re-saved as PNG or JPEG first — renaming them is not enough.",
+        "PASTE-IN LISTS (one per line, Tab between the parts — paste straight from another sheet):",
+        "        Work Anniversary:  Person Name <Tab> 5 years",
+        "        New Openings:      Position <Tab> Experience <Tab> Opening        (keep the header line)",
+        "        Marketing:         Blog Title <Tab> https://link",
     ]
     for i, note in enumerate(notes, start=1):
         cell = ws.cell(row=i, column=1, value=note)
