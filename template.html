@@ -382,6 +382,10 @@
     width: 100%;
     display: block;
     border-radius: 4px;
+    /* Square rather than 4:3 — certificates come through close to square, and
+       a wider frame would crop the recipient's name off the bottom. */
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
   }
 
   /* ── 8. WORK ANNIVERSARIES ──────────────────────────────────── */
@@ -636,6 +640,11 @@
   .announcement-card img {
     width: 100%;
     display: block;
+    /* Fixed frame + cover: source banners arrive at anything from 4:3 to 16:10,
+       and without this each card took its own image's height, so two cards side
+       by side ended up different heights with a gap under the shorter one. */
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
   }
 
   /* ── 11. FOOTER ─────────────────────────────────────────────── */
