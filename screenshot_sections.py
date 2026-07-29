@@ -45,6 +45,10 @@ OUTPUT_DIR = BASE_DIR / "output"
 # "Row Data" folder holding that month's source photos.
 SECTIONS_SUBDIR = "Section wise images"
 
+# Milliseconds allowed for the preview page to load and settle. See the note
+# where it's used — remote source photos can be very large.
+LOAD_TIMEOUT_MS = 180_000
+
 
 def sections_dir(month: str, year: str) -> Path:
     return BASE_DIR / f"{month}-{year}" / SECTIONS_SUBDIR
@@ -137,8 +141,12 @@ def main():
         # generate_simple_email.py halves the read-back PNG dimensions to
         # compensate when setting each <img>'s width/height attributes.
         page = browser.new_page(viewport={"width": 900, "height": 1200}, device_scale_factor=2)
-        page.goto(html_path.resolve().as_uri())
-        page.wait_for_load_state("networkidle")
+        # Generous timeouts: every section has to be fully painted before it's
+        # captured, and photos served from GitHub Pages can be tens of MB each
+        # (a single 18MB event photo takes ~20s on its own), so the default
+        # 30s is not nearly enough for an image-heavy issue.
+        page.goto(html_path.resolve().as_uri(), timeout=LOAD_TIMEOUT_MS)
+        page.wait_for_load_state("networkidle", timeout=LOAD_TIMEOUT_MS)
         page.wait_for_timeout(500)
 
         saved, skipped = [], []

@@ -464,6 +464,10 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    /* Anchor the crop to the top edge, not the centre. These are portrait
+       headshots, so centring a tall photo inside the circle trims equally
+       from top and bottom and takes the top of the head with it. */
+    object-position: top;
   }
   .nj-name {
     font-family: 'Poppins', sans-serif;
