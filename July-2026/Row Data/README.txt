@@ -1,9 +1,17 @@
 ROW DATA — July 2026
 ====================
 
-Drop this month's photos into the folders below. Anything you put here is used
-INSTEAD of the GitHub folder listed in the sheet, so you no longer need to push
-images to the repo each month. A folder you leave empty falls back to GitHub.
+Drop this month's photos into the folders below. That is all that's needed —
+the sheet's "Drive Link" column can be left completely empty for images. These
+folder names ARE the wiring; nothing has to point at them.
+
+Order within a folder is filename order, so prefix with 01, 02, ... when it
+matters.
+
+A folder you leave empty falls back to whatever the sheet links (if anything),
+which for now still means last month's GitHub images — so an empty folder can
+quietly show the wrong month's photos. The run prints where every section got
+its images from; check those lines read "from Row Data" before sending.
 
 IMPORTANT: this folder is found by name. The sheet's month/year must read
 July / 2026 for "July-2026" to be picked up. Change the sheet first, or the

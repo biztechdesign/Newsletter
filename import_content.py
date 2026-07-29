@@ -20,9 +20,10 @@ section images are cut. The full monthly flow is:
     3. upload those PNGs                → see UPLOAD_ME.txt in that same folder
     4. python generate_simple_email.py  → final Gmail/Outlook-safe email HTML
 
-This month's source photos go in "<Month>-<Year>/Row Data", mirroring the
-images/ folder layout (awards/, new_joinee/, events/event1/, …). Anything
-found there wins over the GitHub folder listed in the sheet.
+This month's source photos go in "<Month>-<Year>/Row Data" (awards/,
+new_joinee/, events/event1/, …) — see ROW_DATA_FOLDERS for the full list.
+Those folder names are the only wiring needed, so the sheet's Drive Link
+column can be left empty for images; anything found locally wins over a link.
 
 Update the SHEET IDs at the top when working on a new month.
 """
@@ -51,8 +52,8 @@ BASE_DIR = Path(__file__).parent
 OUTPUT   = BASE_DIR / "content.json"
 
 # This month's local source-image folder, e.g. "July-2026/Row Data". Set by
-# main() once the sheet's month/year are known; images found here take
-# priority over the GitHub folders listed in the sheet. See local_mirror().
+# main() once the sheet's month/year are known. Images found here take
+# priority over anything linked in the sheet — see ROW_DATA_FOLDERS.
 ROW_DATA_DIR: Path | None = None
 
 # Cached by github_token(): "" means "looked and found nothing", None means
@@ -176,43 +177,14 @@ def github_token() -> str:
     return _GITHUB_TOKEN
 
 
-def local_mirror(path: str) -> Path | None:
-    """
-    Map a repo image path ('images/awards') onto this month's local Row Data
-    folder ('<Month>-<Year>/Row Data/awards') and return it if it exists.
-
-    This lets a month's photos be dropped straight into the local folder
-    instead of being pushed to GitHub first: the section images are flattened
-    to PNGs before mailing, so the source photos never need a public URL.
-    Anything missing locally still falls through to the GitHub folder in the
-    sheet, so a half-filled Row Data folder degrades gracefully.
-    """
-    if ROW_DATA_DIR is None:
-        return None
-    rel = path[len("images/"):] if path.startswith("images/") else path
-    candidate = ROW_DATA_DIR / rel
-    return candidate if candidate.exists() else None
-
-
 def list_github_folder(owner: str, repo: str, branch: str, path: str) -> list[dict]:
     """
-    List image files in a folder — this month's local Row Data folder if it has
-    one, otherwise the GitHub repo folder via the API.
-    Returns [{name, stem, url}] sorted by name.
-    """
-    local = local_mirror(path)
-    if local is not None and local.is_dir():
-        result = [
-            {"name": p.name, "stem": p.stem, "url": p.resolve().as_uri()}
-            for p in local.iterdir()
-            if p.is_file() and p.suffix.lower() in IMAGE_EXTS
-        ]
-        if result:
-            return sorted(result, key=lambda x: x["name"])
-        # Say so loudly: falling back means this month's newsletter is about to
-        # show LAST month's photos, which looks fine and is completely wrong.
-        print(f"  NOTE: '{local.relative_to(BASE_DIR)}' is empty - using GitHub images instead.")
+    List image files in a GitHub repo folder via the API.
+    Returns [{name, stem, url}] sorted by name, where url is the GitHub Pages URL.
 
+    Only used as a fallback — this month's Row Data folder is consulted first,
+    by convention, in resolve_all_images().
+    """
     api = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={branch}"
     headers = {
         "User-Agent": "Mozilla/5.0",
@@ -252,9 +224,6 @@ def resolve_single_url(raw: str) -> str:
             files = list_github_folder(info["owner"], info["repo"], info["branch"], info["path"])
             return files[0]["url"] if files else ""
         else:
-            local = local_mirror(info["path"])
-            if local is not None and local.is_file():
-                return local.resolve().as_uri()
             return f"https://{info['owner']}.github.io/{info['repo']}/{info['path']}"
     if "drive.google.com" in raw:
         fid = drive_file_id(raw)
@@ -295,16 +264,57 @@ def split_name_parts(stem: str) -> list[str]:
     return [stem.strip()]
 
 
-def parse_awards_from_github_folder(folder_url: str) -> list[dict]:
+# Where each section's images live under "<Month>-<Year>/Row Data". This is
+# the whole contract: drop files in these folders and the sheet needs no image
+# links at all. HR events are events/event1, events/event2, … by row order.
+ROW_DATA_FOLDERS = {
+    "ceo_photo":          "ceo",
+    "campaign_banner":    "campaign_banner",
+    "hr_wellness_banner": "hr_wellness",
+    "delivery":           "delivery",
+    "excellence":         "excellence",
+    "awards":             "awards",
+    "new_joinee":         "new_joinee",
+    "new_customer":       "new_customer",
+    "certification":      "certification",
+    "announcement":       "announcement",
+    "blogs":              "marketing/blogs",
+}
+
+
+def local_files(subfolder: str) -> list[dict]:
     """
-    List a GitHub folder, parse filenames as 'Title--Name--Designation.ext',
-    or, with an explicit display-order prefix, '01--Title--Name--Designation.ext'.
-    Return awards list with recipients and image_url per recipient.
+    [{name, stem, url}] for the images in a Row Data subfolder, sorted by name
+    so numeric filename prefixes control display order. Empty if this month has
+    no local folder, or that section's folder is missing or has no images.
     """
+    if ROW_DATA_DIR is None:
+        return []
+    folder = ROW_DATA_DIR / subfolder
+    if not folder.is_dir():
+        return []
+    found = [
+        {"name": p.name, "stem": p.stem, "url": p.resolve().as_uri()}
+        for p in folder.iterdir()
+        if p.is_file() and p.suffix.lower() in IMAGE_EXTS
+    ]
+    return sorted(found, key=lambda x: x["name"])
+
+
+def github_folder_files(folder_url: str) -> list[dict]:
+    """[{name, stem, url}] for a GitHub folder URL, or [] if it isn't one."""
     info = parse_github_url(folder_url)
     if not info or not info["is_folder"]:
         return []
-    files = list_github_folder(info["owner"], info["repo"], info["branch"], info["path"])
+    return list_github_folder(info["owner"], info["repo"], info["branch"], info["path"])
+
+
+def parse_awards(files: list[dict]) -> list[dict]:
+    """
+    Parse filenames as 'Title--Name--Designation.ext', or with an explicit
+    display-order prefix, '01--Title--Name--Designation.ext'.
+    Return awards list with recipients and image_url per recipient.
+    """
     award_map: dict[str, dict] = {}
     award_order: list[str] = []
     for f in files:
@@ -325,15 +335,11 @@ def parse_awards_from_github_folder(folder_url: str) -> list[dict]:
     return [award_map[t] for t in award_order]
 
 
-def parse_new_joinees_from_github_folder(folder_url: str) -> list[dict]:
+def parse_new_joinees(files: list[dict]) -> list[dict]:
     """
-    List a GitHub folder, parse filenames as 'Name--Designation.ext',
-    return a list of {name, designation, image_url}.
+    Parse filenames as 'Name--Designation.ext', returning a list of
+    {name, designation, image_url}.
     """
-    info = parse_github_url(folder_url)
-    if not info or not info["is_folder"]:
-        return []
-    files = list_github_folder(info["owner"], info["repo"], info["branch"], info["path"])
     people = []
     for f in files:
         parts = split_name_parts(f["stem"])
@@ -345,39 +351,12 @@ def parse_new_joinees_from_github_folder(folder_url: str) -> list[dict]:
     return people
 
 
-def parse_new_customers_from_github_folder(folder_url: str) -> list[dict]:
+def parse_named_images(files: list[dict]) -> list[dict]:
     """
-    List a GitHub folder of customer logo images (any filenames — no naming
-    convention required). Returns a list of {name, image_url}.
+    Customer logos, announcement banners and certificates all follow the same
+    shape: any filename, the stem carried through as the name.
+    Returns a list of {name, image_url}.
     """
-    info = parse_github_url(folder_url)
-    if not info or not info["is_folder"]:
-        return []
-    files = list_github_folder(info["owner"], info["repo"], info["branch"], info["path"])
-    return [{"name": f["stem"], "image_url": f["url"]} for f in files]
-
-
-def parse_announcements_from_github_folder(folder_url: str) -> list[dict]:
-    """
-    List a GitHub folder of event announcement banner images (any filenames —
-    no naming convention required). Returns a list of {name, image_url}.
-    """
-    info = parse_github_url(folder_url)
-    if not info or not info["is_folder"]:
-        return []
-    files = list_github_folder(info["owner"], info["repo"], info["branch"], info["path"])
-    return [{"name": f["stem"], "image_url": f["url"]} for f in files]
-
-
-def parse_certifications_from_github_folder(folder_url: str) -> list[dict]:
-    """
-    List a GitHub folder of employee certification images (any filenames —
-    no naming convention required). Returns a list of {name, image_url}.
-    """
-    info = parse_github_url(folder_url)
-    if not info or not info["is_folder"]:
-        return []
-    files = list_github_folder(info["owner"], info["repo"], info["branch"], info["path"])
     return [{"name": f["stem"], "image_url": f["url"]} for f in files]
 
 
@@ -390,28 +369,39 @@ def resolve_all_images(data: dict):
 
     print("  Resolving image URLs...")
 
-    # Single-image sections
+    # Single-image sections — first file in the folder wins
     for key in ["ceo_photo", "campaign_banner", "hr_wellness_banner"]:
+        found = local_files(ROW_DATA_FOLDERS[key])
+        if found:
+            img[key] = found[0]["url"]
+            print(f"    {key}: Row Data/{ROW_DATA_FOLDERS[key]}/{found[0]['name']}")
+            continue
         raw = img.get(key, "")
-        if raw:
-            img[key] = resolve_single_url(raw)
-            print(f"    {key}: {img[key][:80] if img[key] else '(not found)'}")
+        img[key] = resolve_single_url(raw) if raw else ""
+        print(f"    {key}: {img[key][:80] if img[key] else '(not found)'}")
 
-    # Delivery Insights — resolve each entry's logo
-    for entry in data.get("delivery_insights", []):
-        if entry.get("logo_url"):
-            entry["logo_url"] = resolve_single_url(entry["logo_url"])
-    print(f"    delivery_insights: {len(data.get('delivery_insights', []))} entry(ies)")
+    # Delivery Insights / Acknowledging Excellence — one logo per entry, taken
+    # in filename order so the folder controls which entry gets which logo.
+    for section, folder_key in (("delivery_insights", "delivery"),
+                                ("acknowledging_excellence", "excellence")):
+        entries = data.get(section, [])
+        logos = local_files(ROW_DATA_FOLDERS[folder_key])
+        for i, entry in enumerate(entries):
+            if i < len(logos):
+                entry["logo_url"] = logos[i]["url"]
+            elif entry.get("logo_url"):
+                entry["logo_url"] = resolve_single_url(entry["logo_url"])
+        source = f"{len(logos)} logo(s) from Row Data" if logos else "sheet links"
+        print(f"    {section}: {len(entries)} entry(ies), {source}")
 
-    # Acknowledging Excellence — resolve each entry's logo
-    for entry in data.get("acknowledging_excellence", []):
-        if entry.get("logo_url"):
-            entry["logo_url"] = resolve_single_url(entry["logo_url"])
-    print(f"    acknowledging_excellence: {len(data.get('acknowledging_excellence', []))} entry(ies)")
-
-    # HR events — each event's raw refs (folder or single URLs) expand into its own photo list
-    for event in data.get("hr", {}).get("events", []):
+    # HR events — events/event1, events/event2, … matched to the sheet's event
+    # rows by order.
+    for n, event in enumerate(data.get("hr", {}).get("events", []), start=1):
         raws = event.pop("_photos_raw", [])
+        found = local_files(f"events/event{n}")
+        if found:
+            event["photos"] = [f["url"] for f in found]
+            continue
         photos = []
         for raw in raws:
             photos.extend(resolve_folder_urls(raw))
@@ -420,84 +410,79 @@ def resolve_all_images(data: dict):
     n_event_photos = sum(len(e["photos"]) for e in data.get("hr", {}).get("events", []))
     print(f"    hr events: {n_events} event(s), {n_event_photos} photo(s) total")
 
-    # Awards — folder URL in sheet (no title/name in row)
-    award_folders = data.pop("_award_folder_urls", [])
-    if award_folders:
-        for folder_url in award_folders:
-            awards = parse_awards_from_github_folder(folder_url)
-            if awards:
-                data["rewards"]["awards"] = awards
-                print(f"    awards: {len(awards)} award(s) from folder")
-                break
-    else:
-        # Explicit award rows — resolve per-recipient image_url
-        for award in data["rewards"]["awards"]:
-            for r in award["recipients"]:
-                if r.get("image_url"):
-                    r["image_url"] = resolve_single_url(r["image_url"])
+    # Folder-driven sections. Each is filled from its Row Data folder; only if
+    # that's empty does it fall back to a folder URL in the sheet, and failing
+    # that to per-row image links.
+    #
+    # (data key, Row Data folder key, sheet-folder-URL key, parser, label)
+    FOLDER_SECTIONS = [
+        ("_awards",        "awards",         "_award_folder_urls",
+         parse_awards,       "award(s)"),
+        ("new_joinees",    "new_joinee",     "_new_joinee_folder_urls",
+         parse_new_joinees,  "new joinee(s)"),
+        ("new_customers",  "new_customer",   "_new_customer_folder_urls",
+         parse_named_images, "customer logo(s)"),
+        ("announcements",  "announcement",   "_announcement_folder_urls",
+         parse_named_images, "announcement(s)"),
+        ("certifications", "certification",  "_certification_folder_urls",
+         parse_named_images, "certificate(s)"),
+    ]
 
-    # New joinees — folder URL in sheet (name blank) OR explicit rows
-    new_joinee_folders = data.pop("_new_joinee_folder_urls", [])
-    if new_joinee_folders:
-        for folder_url in new_joinee_folders:
-            people = parse_new_joinees_from_github_folder(folder_url)
-            if people:
-                data["new_joinees"] = people
-                print(f"    new_joinees: {len(people)} new joinee(s) from folder")
-                break
-    else:
-        for person in data.get("new_joinees", []):
-            if person.get("image_url"):
-                person["image_url"] = resolve_single_url(person["image_url"])
+    for data_key, folder_key, sheet_key, parser, label in FOLDER_SECTIONS:
+        # Awards live one level down, under rewards.
+        container = data["rewards"] if data_key == "_awards" else data
+        key = "awards" if data_key == "_awards" else data_key
 
-    # New customers — folder URL in sheet (name blank) OR explicit rows
-    new_customer_folders = data.pop("_new_customer_folder_urls", [])
-    if new_customer_folders:
-        for folder_url in new_customer_folders:
-            customers = parse_new_customers_from_github_folder(folder_url)
-            if customers:
-                data["new_customers"] = customers
-                print(f"    new_customers: {len(customers)} customer logo(s) from folder")
-                break
-    else:
-        for customer in data.get("new_customers", []):
-            if customer.get("image_url"):
-                customer["image_url"] = resolve_single_url(customer["image_url"])
+        sheet_folders = data.pop(sheet_key, [])
 
-    # Announcements — folder URL in sheet (name blank) OR explicit rows
-    announcement_folders = data.pop("_announcement_folder_urls", [])
-    if announcement_folders:
-        for folder_url in announcement_folders:
-            announcements = parse_announcements_from_github_folder(folder_url)
-            if announcements:
-                data["announcements"] = announcements
-                print(f"    announcements: {len(announcements)} announcement(s) from folder")
-                break
-    else:
-        for announcement in data.get("announcements", []):
-            if announcement.get("image_url"):
-                announcement["image_url"] = resolve_single_url(announcement["image_url"])
+        found = local_files(ROW_DATA_FOLDERS[folder_key])
+        if found:
+            parsed = parser(found)
+            if parsed:
+                container[key] = parsed
+                print(f"    {key}: {len(parsed)} {label} from Row Data/{ROW_DATA_FOLDERS[folder_key]}")
+                continue
 
-    # Certifications — folder URL in sheet (name blank) OR explicit rows
-    certification_folders = data.pop("_certification_folder_urls", [])
-    if certification_folders:
-        for folder_url in certification_folders:
-            certifications = parse_certifications_from_github_folder(folder_url)
-            if certifications:
-                data["certifications"] = certifications
-                print(f"    certifications: {len(certifications)} certificate(s) from folder")
-                break
-    else:
-        for certification in data.get("certifications", []):
-            if certification.get("image_url"):
-                certification["image_url"] = resolve_single_url(certification["image_url"])
+        if sheet_folders:
+            for folder_url in sheet_folders:
+                parsed = parser(github_folder_files(folder_url))
+                if parsed:
+                    container[key] = parsed
+                    print(f"    {key}: {len(parsed)} {label} from GitHub")
+                    break
+            continue
 
-    # Blog images — if multiple blogs share a folder URL, assign images by index
+        # No folder either side — resolve whatever per-row links exist.
+        if key == "awards":
+            rows = container[key]
+            for award in rows:
+                for r in award["recipients"]:
+                    if r.get("image_url"):
+                        r["image_url"] = resolve_single_url(r["image_url"])
+        else:
+            rows = container.get(key, [])
+            for row in rows:
+                if row.get("image_url"):
+                    row["image_url"] = resolve_single_url(row["image_url"])
+        if rows:
+            print(f"    {key}: {len(rows)} {label} from sheet rows")
+        elif ROW_DATA_DIR is not None:
+            print(f"    {key}: none - add images to Row Data/{ROW_DATA_FOLDERS[folder_key]}")
+
+    # Blog images — Row Data/marketing/blogs in filename order, one per post.
+    blog_images = local_files(ROW_DATA_FOLDERS["blogs"])
+
+    # Otherwise: if multiple blogs share a folder URL, assign images by index
     folder_cache: dict[str, list[str]] = {}
     folder_counter: dict[str, int] = {}
     for i, post in enumerate(data["marketing"]["blog_posts"], 1):
+        if i <= len(blog_images):
+            post["image_url"] = blog_images[i - 1]["url"]
+            print(f"    blog{i}: Row Data/{ROW_DATA_FOLDERS['blogs']}/{blog_images[i - 1]['name']}")
+            continue
         raw = post.get("image_url", "")
         if not raw:
+            print(f"    blog{i}: (no image)")
             continue
         info = parse_github_url(raw)
         if info and info["is_folder"]:
