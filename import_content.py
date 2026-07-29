@@ -725,6 +725,62 @@ def parse_anniversaries_from_cell(raw: str) -> list:
     return [{"years": y, "names": names} for y, names in sorted(year_map.items(), reverse=True)]
 
 
+def parse_openings_from_cell(raw: str) -> list[dict]:
+    """
+    Parse open positions pasted into the sheet's Extra column, one per line:
+
+        Position                        Experience   Opening
+        SEO Executive                   Fresher      1
+        Business Development Executive  2+ years     2
+
+    A header line is detected and used to map the columns, so Position /
+    Experience / Opening can be in any order; without one, that order is
+    assumed. Tab, semicolon and comma all work as the separator.
+    """
+    rows = []
+    order = ["title", "experience", "openings"]
+    for line in str(raw or "").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        for sep in ("\t", ";", ","):
+            if sep in line:
+                parts = [p.strip() for p in line.split(sep)]
+                break
+        else:
+            parts = [line]
+
+        lowered = [p.lower() for p in parts]
+        if any(h in lowered for h in ("position", "designation", "role")):
+            # Header row — remember the column order, don't emit a position.
+            mapping = []
+            for p in lowered:
+                if p in ("position", "designation", "role"):   mapping.append("title")
+                elif p.startswith("exp"):                      mapping.append("experience")
+                elif p.startswith("open") or "count" in p or "vacan" in p:
+                    mapping.append("openings")
+                else:                                          mapping.append("")
+            if "title" in mapping:
+                order = mapping
+            continue
+
+        row = {"title": "", "experience": "", "openings": 1}
+        for i, part in enumerate(parts):
+            field = order[i] if i < len(order) else ""
+            if field == "openings":
+                try:
+                    row["openings"] = int(float(part)) if part else 1
+                except ValueError:
+                    row["openings"] = 1
+            elif field:
+                row[field] = part
+        if not row["title"]:
+            print(f"  WARNING: skipping openings line (no position): {line!r}")
+            continue
+        rows.append(row)
+    return rows
+
+
 # ── New Openings (external sheet) parser ────────────────────────────────────
 
 def parse_openings_sheet(wb: openpyxl.Workbook, month: str) -> list[dict]:
@@ -988,6 +1044,9 @@ def parse_content_sheet(wb: openpyxl.Workbook) -> dict:
             url = cell_str(drive)
             if url and url.startswith("http"):
                 data["_openings_sheet_url"] = url
+            # Positions pasted straight into the Extra column, one per line.
+            if cell_str(extra):
+                data["_openings_inline"] = cell_str(extra)
 
         # ── Marketing Blogs (blog1, blog2, …) ────────────────────────────
         elif re.match(r"^blog\d*$", field):
@@ -1064,7 +1123,14 @@ def main():
 
     # ── Step 1b: New Openings — external sheet link overrides sheet rows ───
     openings_sheet_url = data.pop("_openings_sheet_url", None)
-    if openings_sheet_url:
+    openings_inline = data.pop("_openings_inline", None)
+    if openings_inline:
+        # Positions typed into the sheet win — no external workbook needed.
+        print("Reading New Openings from the sheet...")
+        positions = parse_openings_from_cell(openings_inline)
+        if positions:
+            data["new_openings"]["positions"] = positions
+    elif openings_sheet_url:
         print(f"Downloading New Openings sheet...")
         try:
             openings_sheet_id = drive_file_id(openings_sheet_url)
