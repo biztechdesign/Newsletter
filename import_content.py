@@ -117,9 +117,60 @@ def parse_years(tenure_str) -> int:
     return int(m.group(1)) if m else 0
 
 
+# Written in a cell to mean "nothing this month". Treated exactly like an
+# empty cell, so the section drops out of the newsletter instead of rendering
+# the word itself as if it were content.
+NOT_APPLICABLE = {"na", "n/a", "n.a.", "n.a", "-", "--", "none", "nil",
+                  "not applicable", "no", "x"}
+
+# Which section each sheet field belongs to. Writing NA against any of these
+# drops that whole section from the newsletter, even if its Row Data folder
+# still has images in it — "NA" is an explicit instruction, not just an
+# absence, so it has to beat leftover files.
+FIELD_SECTION = {
+    "ceo_message":            "ceo",
+    "campaign_banner":        "campaign",
+    "new_customer":           "new_customers",
+    "delivery":               "delivery",
+    "delivery_description":   "delivery",
+    "excellence":             "excellence",
+    "hr_wellness_banner":     "hr",
+    "hr_event": "hr", "hr_event1": "hr", "hr_event2": "hr", "hr_event3": "hr",
+    "award":                  "rewards",
+    "employee_certification": "certifications",
+    "anniversary":            "anniversaries",
+    "new_joinee":             "new_joinees",
+    "opening":                "openings",
+    "new_openings_sheet":     "openings",
+    "blog1": "marketing", "blog2": "marketing",
+    "new_announcement":       "announcements",
+}
+
+
+def is_na(value) -> bool:
+    """Whether a cell says 'nothing this month' rather than holding content."""
+    return isinstance(value, str) and value.strip().lower() in NOT_APPLICABLE
+
+
+def blank_if_na(value):
+    """
+    None for a cell that says 'NA', otherwise the value untouched.
+
+    Deliberately does not stringify: some cells hold real dates (the
+    anniversary row's month) or numbers, and the callers depend on those
+    types surviving.
+    """
+    return None if is_na(value) else value
+
+
 def cell_str(value) -> str:
-    """Safe string conversion of a cell value."""
-    return str(value).strip() if value is not None else ""
+    """
+    Safe string conversion of a cell value, with 'NA' and friends normalised
+    to empty so they read as 'no content this month' everywhere downstream.
+    """
+    if value is None or is_na(value):
+        return ""
+    return str(value).strip()
 
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
@@ -847,6 +898,8 @@ def parse_content_sheet(wb: openpyxl.Workbook) -> dict:
             "hr_wellness_banner": "",
         },
         "footer": FOOTER,
+        # Sections explicitly marked NA in the sheet; consumed by generate.py.
+        "_na_sections": set(),
     }
 
     award_map: dict = {}   # award title → award dict
@@ -866,11 +919,20 @@ def parse_content_sheet(wb: openpyxl.Workbook) -> dict:
         if not field or field.startswith("▸") or field.lower() == "field":
             continue
 
-        val    = row[1].value if len(row) > 1 else None
-        extra  = row[2].value if len(row) > 2 else None
-        extra2 = row[3].value if len(row) > 3 else None
+        # blank_if_na: a cell reading "NA" (or "-", "none", …) means nothing
+        # this month, so it is treated exactly as if it were empty and the
+        # section drops out rather than rendering the word as content.
+        # An explicit NA anywhere on the row removes the section outright.
+        if FIELD_SECTION.get(field) and any(
+            is_na(c.value) for c in row[1:5] if c is not None
+        ):
+            data["_na_sections"].add(FIELD_SECTION[field])
+
+        val    = blank_if_na(row[1].value) if len(row) > 1 else None
+        extra  = blank_if_na(row[2].value) if len(row) > 2 else None
+        extra2 = blank_if_na(row[3].value) if len(row) > 3 else None
         drive_cell = row[4] if len(row) > 4 else None
-        drive = drive_cell.value if drive_cell is not None else None
+        drive = blank_if_na(drive_cell.value) if drive_cell is not None else None
         if (
             not (isinstance(drive, str) and drive.strip().lower().startswith("http"))
             and drive_cell is not None
@@ -1084,6 +1146,9 @@ def parse_content_sheet(wb: openpyxl.Workbook) -> dict:
         data["acknowledging_excellence"].append(_legacy_excellence)
     if not data["hr"]["events"] and (_legacy_hr_event_title or _legacy_event_photos_raw):
         data["hr"]["events"].append({"title": _legacy_hr_event_title, "_photos_raw": _legacy_event_photos_raw})
+
+    # A set can't be written to JSON.
+    data["_na_sections"] = sorted(data["_na_sections"])
 
     return data
 

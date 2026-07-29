@@ -290,82 +290,52 @@ def build():
     icon_social_twitter   = img_src(ASSETS_DIR / "icon_social_twitter.png")
     icon_social_dribbble  = img_src(ASSETS_DIR / "icon_social_dribbble.png")
 
-    # Monthly images — prefer Drive URLs from content.json, fall back to local files
+    # Monthly images come from content.json, which import_content.py has
+    # already resolved (this month's Row Data folder, else the sheet's links).
+    #
+    # There used to be a fallback here to the repo's images/ folder whenever a
+    # value was missing. That silently refilled any section left empty with the
+    # PREVIOUS issue's photos — so an empty folder, or a row marked NA to drop a
+    # section, produced a section that looked perfectly correct and was wrong.
+    # content.json is the single source of truth; empty means empty.
     img_urls = data.get("image_urls", {})
 
-    ceo_photo          = img_urls.get("ceo_photo")          or img_src(first_image(IMAGES_DIR / "ceo"))
-    campaign_banner    = img_urls.get("campaign_banner")    or img_src(first_image(IMAGES_DIR / "campaign_banner"))
-    hr_wellness_banner = img_urls.get("hr_wellness_banner") or img_src(first_image(IMAGES_DIR / "hr_wellness"))
+    ceo_photo          = img_urls.get("ceo_photo", "")
+    campaign_banner    = img_urls.get("campaign_banner", "")
+    hr_wellness_banner = img_urls.get("hr_wellness_banner", "")
 
     # HR events — dynamic list (up to 3+ events, each with its own title + photos).
     # Normalizes old single-event content.json shape too (photos lived under image_urls.event_photos).
     data["hr"] = normalize_hr(data.get("hr"), img_urls.get("event_photos", []))
-    for event in data["hr"]["events"]:
-        if not event.get("photos"):
-            event["photos"] = [img_src(p) for p in all_images(IMAGES_DIR / "events")]
+    # An event with neither a title nor photos is nothing to show.
+    data["hr"]["events"] = [
+        e for e in data["hr"]["events"]
+        if (e.get("title") or "").strip() or e.get("photos")
+    ]
 
     # Delivery Insights / Acknowledging Excellence — dynamic list of entries.
     # Normalizes old single-dict content.json shape too (logo lived under image_urls).
     data["delivery_insights"] = normalize_entries(data.get("delivery_insights"), img_urls.get("delivery_logo", ""))
     data["acknowledging_excellence"] = normalize_entries(data.get("acknowledging_excellence"), img_urls.get("excellence_logo", ""))
 
-    for entry in data["delivery_insights"]:
-        if not entry.get("logo_url"):
-            entry["logo_url"] = img_src(first_image(IMAGES_DIR / "delivery"))
-    for entry in data["acknowledging_excellence"]:
-        if not entry.get("logo_url"):
-            entry["logo_url"] = img_src(first_image(IMAGES_DIR / "excellence"))
+    # Drop entries with no text and no logo — an empty row must not keep a
+    # section alive, or marking it NA in the sheet would have no effect.
+    data["delivery_insights"] = [
+        e for e in data["delivery_insights"]
+        if (e.get("description") or "").strip() or e.get("logo_url")
+    ]
+    data["acknowledging_excellence"] = [
+        e for e in data["acknowledging_excellence"]
+        if (e.get("testimonial") or e.get("description") or "").strip() or e.get("logo_url")
+    ]
 
-    # Award images + data — parse from image filenames if available
-    awards_folder = IMAGES_DIR / "awards"
-    named_files = [f for f in all_images(awards_folder) if "--" in f.stem]
-    if named_files:
-        # Filename convention: "Award Title--Recipient Name--Designation.jpg"
-        parsed_awards, award_images = parse_awards_from_images(awards_folder)
-        data["rewards"]["awards"] = parsed_awards
-    else:
-        # Fall back to sheet-based award data + subfolder lookup
-        award_images = []
-        for award in data["rewards"]["awards"]:
-            local_folder_photos = [img_src(p) for p in all_images(awards_folder / award["folder"])]
-            photos = []
-            for i, recipient in enumerate(award["recipients"]):
-                url = recipient.get("image_url") or (local_folder_photos[i] if i < len(local_folder_photos) else "")
-                photos.append(url)
-            award_images.append(photos)
-
+    award_images = [
+        [r.get("image_url", "") for r in award.get("recipients", [])]
+        for award in data["rewards"]["awards"]
+    ]
     reward_rows = build_reward_rows(data["rewards"]["awards"], award_images)
 
-    # New joinees — prefer content.json (already resolved), else local folder fallback
-    if not data.get("new_joinees"):
-        local_new_joinees = parse_new_joinees_from_images(IMAGES_DIR / "new_joinees")
-        if local_new_joinees:
-            data["new_joinees"] = local_new_joinees
-
-    # New customers — prefer content.json (already resolved), else local folder fallback
-    if not data.get("new_customers"):
-        local_new_customers = parse_new_customers_from_images(IMAGES_DIR / "new_customer")
-        if local_new_customers:
-            data["new_customers"] = local_new_customers
-
-    # Announcements — prefer content.json (already resolved), else local folder fallback
-    if not data.get("announcements"):
-        local_announcements = parse_announcements_from_images(IMAGES_DIR / "announcement")
-        if local_announcements:
-            data["announcements"] = local_announcements
-
-    # Certifications — prefer content.json (already resolved), else local folder fallback
-    if not data.get("certifications"):
-        local_certifications = parse_certifications_from_images(IMAGES_DIR / "certification")
-        if local_certifications:
-            data["certifications"] = local_certifications
-
-    # Blog images — per post image_url, fall back to folder lookup
-    local_blog_photos = [img_src(p) for p in all_images(IMAGES_DIR / "marketing" / "blogs")]
-    blog_images = [
-        post.get("image_url") or (local_blog_photos[i] if i < len(local_blog_photos) else "")
-        for i, post in enumerate(data["marketing"]["blog_posts"])
-    ]
+    blog_images = [post.get("image_url", "") for post in data["marketing"]["blog_posts"]]
 
     openings_qr_img = img_src(ASSETS_DIR / "qr_code.png")  # optional fixed asset
 
@@ -385,6 +355,12 @@ def build():
         "marketing":     bool((data.get("marketing") or {}).get("blog_posts")),
         "announcements": bool(data.get("announcements")),
     }
+
+    # A section the sheet marks NA is dropped even when content exists for it,
+    # e.g. last month's photos still sitting in its Row Data folder. "NA" is an
+    # instruction to leave the section out, not merely a missing value.
+    for key in data.get("_na_sections", []):
+        show[key] = False
 
     # ── Render template ──────────────────────────────────────────
     env = Environment(loader=FileSystemLoader(str(BASE_DIR)))
