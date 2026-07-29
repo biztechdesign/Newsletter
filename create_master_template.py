@@ -21,6 +21,7 @@ Then share the file, collect it back, and run:
     python import_content.py --sheet=<file.xlsx>
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -150,12 +151,24 @@ def build(out_path: Path):
     return out_path, header_row
 
 
+MONTH_FOLDER = re.compile(
+    r"^(January|February|March|April|May|June|July|August|September|October|"
+    r"November|December)-\d{4}$", re.IGNORECASE
+)
+
+
 def ensure_folders(sheet_path: Path) -> list[str]:
     """
     Create the Row Data folder for every section the sheet names, next to the
     sheet itself. Nested paths (events/event1, marketing/blogs) are created in
     full. Existing folders and their contents are left alone.
+
+    Only done when the sheet actually lives in a "<Month>-<Year>" folder. The
+    blank template is written to the project root, and scaffolding there would
+    litter it with twenty empty directories that belong to no issue.
     """
+    if not MONTH_FOLDER.match(sheet_path.parent.name):
+        return []
     root = sheet_path.parent / "Row Data"
     made = []
     for _sr, _section, _poc, _field, folder, _hint in ROWS:
