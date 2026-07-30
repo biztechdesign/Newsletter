@@ -32,7 +32,10 @@ Run this after screenshot_sections.py has produced this month's PNGs.
 """
 
 import json
+import os
+import sys
 from pathlib import Path
+from urllib.parse import quote
 
 from jinja2 import Environment, FileSystemLoader
 from PIL import Image
@@ -190,8 +193,18 @@ def resolve_marketing(base_url, data, sec_dir):
 def main():
     data = json.loads(CONTENT_JSON.read_text(encoding="utf-8"))
     month, year = data["month"], data["year"]
-    base_url = hosted_base(month, year)
     sec_dir = sections_dir(month, year)
+
+    # --local points the <img> tags at the PNGs on this machine instead of the
+    # server, so the email can be checked (or pasted into Gmail, which uploads
+    # the images itself) before anything has been uploaded. Written to its own
+    # file so the sendable, server-hosted one is never overwritten by it.
+    local_mode = "--local" in sys.argv
+    if local_mode:
+        rel = os.path.relpath(sec_dir, OUTPUT_DIR).replace("\\", "/")
+        base_url = quote(rel)
+    else:
+        base_url = hosted_base(month, year)
     if not sec_dir.is_dir():
         raise SystemExit(
             f"{sec_dir} not found — run 'python screenshot_sections.py' first to cut the section images."
@@ -221,7 +234,8 @@ def main():
     )
 
     OUTPUT_DIR.mkdir(exist_ok=True)
-    out_file = OUTPUT_DIR / f"newsletter_{month}_{year}_simple_email.html"
+    suffix = "_simple_email_LOCAL" if local_mode else "_simple_email"
+    out_file = OUTPUT_DIR / f"newsletter_{month}_{year}{suffix}.html"
     out_file.write_text(html, encoding="utf-8")
 
     all_stems = [s for s, _ in SECTIONS_BEFORE_MARKETING] + [s for s, _ in SECTIONS_AFTER_MARKETING]
@@ -233,24 +247,31 @@ def main():
     ]
     skipped = [s for s in all_stems if s not in included]
 
-    # Every PNG in the section folder has to exist at base_url before sending.
     upload_files = sorted(p.name for p in sec_dir.glob("*.png"))
-    upload_note = sec_dir / "UPLOAD_ME.txt"
-    upload_note.write_text(
-        f"Upload these {len(upload_files)} files to:\n{base_url}/\n\n"
-        + "\n".join(upload_files)
-        + "\n",
-        encoding="utf-8",
-    )
+    if not local_mode:
+        # Every PNG has to exist at base_url before sending.
+        upload_note = sec_dir / "UPLOAD_ME.txt"
+        upload_note.write_text(
+            f"Upload these {len(upload_files)} files to:\n{hosted_base(month, year)}/\n\n"
+            + "\n".join(upload_files)
+            + "\n",
+            encoding="utf-8",
+        )
 
     print(f"\nSimple email generated: {out_file}")
     print(f"  Sections included: {' | '.join(included)}{' | Marketing Highlights' if marketing else ''}")
     if skipped or not marketing:
         missing = skipped + ([] if marketing else ["Marketing Highlights"])
         print(f"  Sections skipped (no PNG found): {' | '.join(missing)}")
-    print(f"  Image host: {base_url}/")
-    print(f"  UPLOAD {len(upload_files)} PNG(s) from '{sec_dir}' to that folder before sending.")
-    print(f"  File list written to: {upload_note}")
+    if local_mode:
+        print(f"  Images: local files in '{sec_dir}' - for checking, and for")
+        print(f"          pasting into Gmail, which uploads them itself.")
+        print(f"  NOT for sending as raw HTML: the paths only exist on this machine.")
+    else:
+        print(f"  Image host: {hosted_base(month, year)}/")
+        print(f"  UPLOAD {len(upload_files)} PNG(s) from '{sec_dir}' to that folder before sending.")
+        print(f"  File list written to: {upload_note}")
+        print(f"  Preview it before uploading with: python generate_simple_email.py --local")
     print(f"  Open in browser: file:///{out_file.as_posix()}\n")
 
 
