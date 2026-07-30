@@ -43,22 +43,54 @@ from generate_simple_email import (
 BASE_DIR = Path(__file__).parent
 CONTENT_JSON = BASE_DIR / "content.json"
 CONFIG_FILE = BASE_DIR / "ftp_config.json"
+ENV_FILE = BASE_DIR / ".env"
+
+
+def read_env_file(path: Path) -> dict:
+    """
+    KEY=VALUE lines from a .env file. Blank lines and # comments are skipped,
+    and surrounding quotes are stripped so a password pasted with quotes still
+    works. Deliberately hand-rolled: one small loop beats a dependency, and a
+    missing package here would block the upload at the worst moment.
+    """
+    values = {}
+    if not path.is_file():
+        return values
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        values[key.strip()] = value
+    return values
 
 
 def load_config() -> dict:
-    """Credentials from ftp_config.json, overridden by any env vars set."""
+    """
+    Credentials, in increasing order of precedence:
+      ftp_config.json  →  .env  →  real environment variables
+    so a value exported in the shell always wins over a file on disk.
+    """
     config = {}
     if CONFIG_FILE.is_file():
         config = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
 
-    env = {
-        "host":     os.environ.get("NEWSLETTER_FTP_HOST"),
-        "user":     os.environ.get("NEWSLETTER_FTP_USER"),
-        "password": os.environ.get("NEWSLETTER_FTP_PASS"),
-        "dir":      os.environ.get("NEWSLETTER_FTP_DIR"),
-        "tls":      os.environ.get("NEWSLETTER_FTP_TLS"),
+    keys = {
+        "NEWSLETTER_FTP_HOST": "host",
+        "NEWSLETTER_FTP_USER": "user",
+        "NEWSLETTER_FTP_PASS": "password",
+        "NEWSLETTER_FTP_DIR":  "dir",
+        "NEWSLETTER_FTP_TLS":  "tls",
     }
-    config.update({k: v for k, v in env.items() if v})
+    from_file = read_env_file(ENV_FILE)
+    for env_name, key in keys.items():
+        value = os.environ.get(env_name) or from_file.get(env_name)
+        if value:
+            config[key] = value
+
     config.setdefault("dir", HOSTED_SERVER_PATH)
     return config
 
