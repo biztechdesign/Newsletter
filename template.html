@@ -642,6 +642,12 @@
   .announcement-card {
     box-sizing: border-box;
   }
+  /* A lone announcement spans both columns, so it runs the full content width —
+     the same left and right edges as the blog cards — instead of sitting in the
+     left half with empty space beside it. */
+  .announcement-card:only-child {
+    grid-column: 1 / -1;
+  }
   .announcement-card img {
     width: 100%;
     display: block;
