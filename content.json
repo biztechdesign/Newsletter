@@ -1,8 +1,8 @@
 {
-  "month": "July",
+  "month": "August",
   "year": "2026",
   "ceo_desk": {
-    "message": "Every new quarter is a reminder that progress isn't defined by where we begin, but by the choices we make every day. Let's challenge ourselves to think bigger, embrace change with confidence, and turn every opportunity into meaningful growth. Together, let's build a quarter we'll be proud to look back on.",
+    "message": "The colorful energy of Holi arrived in March, serving as a reminder that optimism, teamwork, and purpose are the foundations of fresh starts. This vitality drives Biztech ahead.\nLet's set higher goals, increase our influence, and keep developing solutions that make an impact.\nThere are plenty of opportunities on the road ahead, and I'm sure we'll reach even bigger goals together.",
     "ceo_name": "Maulik Shah",
     "ceo_title": "Founder & CEO"
   },
@@ -14,8 +14,8 @@
   ],
   "acknowledging_excellence": [
     {
-      "client_label": "",
-      "testimonial": "",
+      "client_label": "[Pratik: PaceX Client for Milan and Sarvil:\nI want to mention that we did with great succes the server migration of the admin server to a new server. Sarvil did a great job, we prepared together much things before and last monday we migrate. I am very happy with the new server.\n\nAlso a shout out to Milan, he is very good with the details in the app.\n\nSarvil and Milan are gold for me!]",
+      "testimonial": "[Pratik: PaceX Client for Milan and Sarvil:\nI want to mention that we did with great succes the server migration of the admin server to a new server. Sarvil did a great job, we prepared together much things before and last monday we migrate. I am very happy with the new server.\n\nAlso a shout out to Milan, he is very good with the details in the app.\n\nSarvil and Milan are gold for me!]",
       "logo_url": ""
     },
     {
@@ -43,107 +43,13 @@
   "rewards": {
     "awards": []
   },
-  "anniversaries": [
-    {
-      "years": 13,
-      "names": [
-        "Viral savaj"
-      ]
-    },
-    {
-      "years": 11,
-      "names": [
-        "Tushar Avugandey -office boy",
-        "Bhamini Prajapati"
-      ]
-    },
-    {
-      "years": 10,
-      "names": [
-        "Dhaval Panara"
-      ]
-    },
-    {
-      "years": 7,
-      "names": [
-        "Dhvani Prajapati",
-        "Tushar Jadav",
-        "Ghanshyam Bhilavala",
-        "Rishabh Rana"
-      ]
-    },
-    {
-      "years": 6,
-      "names": [
-        "Adil Dhada",
-        "Vipul Vasava",
-        "Dhruvi Parmar",
-        "Vaibhav Shah",
-        "Shaikh Mo. Zaid Mo. Sharif"
-      ]
-    },
-    {
-      "years": 5,
-      "names": [
-        "Sehal Bansal",
-        "Shyam Kamani",
-        "Vishal Parmar",
-        "Akshaykumar Dake"
-      ]
-    },
-    {
-      "years": 4,
-      "names": [
-        "Vaibhav Sathwara",
-        "Gaurav Siddhapathaki",
-        "Sahil Dalsaniya",
-        "Hard Dharajiya",
-        "Hemant Varvariya",
-        "Jignesh Dhandhukiya",
-        "Anil Luhar",
-        "Anjana Gajjar",
-        "Kiran Nandaniya"
-      ]
-    },
-    {
-      "years": 3,
-      "names": [
-        "Amisha Darji",
-        "Vatsal Solanki",
-        "Mansi Mistry",
-        "Rahul Pranami",
-        "Nidhi Rajput"
-      ]
-    },
-    {
-      "years": 2,
-      "names": [
-        "Nilesh Negi"
-      ]
-    }
-  ],
-  "new_joinees": [
-    {
-      "name": "Advait Solanki",
-      "designation": "Business Development Intern",
-      "image_url": "../July-2026/Row%20Data/new_joinee/Advait%20Solanki%20-%20Business%20Development%20Intern.jpeg"
-    },
-    {
-      "name": "Arpi Shah",
-      "designation": "Sales Automation Analyst",
-      "image_url": "../July-2026/Row%20Data/new_joinee/Arpi%20Shah%20-%20Sales%20Automation%20Analyst.jpeg"
-    },
-    {
-      "name": "Vraj Patel",
-      "designation": "Digital Marketing Executive",
-      "image_url": "../July-2026/Row%20Data/new_joinee/Vraj%20Patel%20-%20Digital%20Marketing%20Executive.jpeg"
-    }
-  ],
+  "anniversaries": [],
+  "new_joinees": [],
   "new_customers": [],
   "announcements": [
     {
-      "name": "Independence Day Celebration -1",
-      "image_url": "../July-2026/Row%20Data/announcement/Independence%20Day%20Celebration%20-1.png"
+      "name": "Independence Day Celebration",
+      "image_url": ""
     }
   ],
   "certifications": [],
@@ -172,8 +78,8 @@
     "view_all_url": "https://www.biztechcs.com/blog/"
   },
   "image_urls": {
-    "ceo_photo": "../July-2026/Row%20Data/ceo/Maulik03-1.png",
-    "campaign_banner": "../July-2026/Row%20Data/campaign_banner/ChatGPT%20Image%20Jul%2029%2C%202026%2C%2011_22_34%20AM.png",
+    "ceo_photo": "",
+    "campaign_banner": "",
     "hr_wellness_banner": ""
   },
   "footer": {
