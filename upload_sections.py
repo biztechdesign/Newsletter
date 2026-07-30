@@ -22,10 +22,11 @@ excludes:
 
     {"host": "...", "user": "...", "password": "...", "dir": "/home/..."}
 
-FTP and FTPS are supported through the standard library. FTPS is tried first
-and falls back to plain FTP, since a plain-FTP-only server rejects the TLS
-handshake outright. SFTP (port 22) is a different protocol and would need
-paramiko installed — say so rather than failing obscurely.
+Protocol is chosen by probing: port 22 means SFTP (needs paramiko), port 21
+means FTP/FTPS via the standard library. Set NEWSLETTER_FTP_PROTOCOL to sftp
+or ftp to skip the probe. The live host answers on 22 only, so plain FTP sits
+through a 60s connect timeout before failing with nothing pointing at the
+cause — hence probing rather than assuming.
 """
 
 import ftplib
@@ -79,11 +80,14 @@ def load_config() -> dict:
         config = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
 
     keys = {
-        "NEWSLETTER_FTP_HOST": "host",
-        "NEWSLETTER_FTP_USER": "user",
-        "NEWSLETTER_FTP_PASS": "password",
-        "NEWSLETTER_FTP_DIR":  "dir",
-        "NEWSLETTER_FTP_TLS":  "tls",
+        "NEWSLETTER_FTP_HOST":     "host",
+        "NEWSLETTER_FTP_USER":     "user",
+        "NEWSLETTER_FTP_PASS":     "password",
+        "NEWSLETTER_FTP_DIR":      "dir",
+        "NEWSLETTER_FTP_TLS":      "tls",
+        "NEWSLETTER_FTP_PROTOCOL": "protocol",
+        "NEWSLETTER_FTP_PORT":     "port",
+        "NEWSLETTER_FTP_KEY_FILE": "key_file",
     }
     from_file = read_env_file(ENV_FILE)
     for env_name, key in keys.items():
@@ -93,6 +97,64 @@ def load_config() -> dict:
 
     config.setdefault("dir", HOSTED_SERVER_PATH)
     return config
+
+
+def port_open(host: str, port: int, timeout: float = 6) -> bool:
+    import socket
+    sock = socket.socket()
+    sock.settimeout(timeout)
+    try:
+        sock.connect((host, port))
+        return True
+    except OSError:
+        return False
+    finally:
+        sock.close()
+
+
+def pick_protocol(config: dict) -> str:
+    """
+    'sftp' or 'ftp'. Set NEWSLETTER_FTP_PROTOCOL to force one; otherwise the
+    open port decides.
+
+    Worth probing rather than assuming: this host answers on 22 and not 21, so
+    an FTP-only client sat through a 60s connect timeout before failing with
+    nothing that pointed at the actual cause.
+    """
+    choice = str(config.get("protocol", "auto")).lower()
+    if choice in ("sftp", "ftp"):
+        return choice
+    if port_open(config["host"], 22):
+        return "sftp"
+    if port_open(config["host"], 21):
+        return "ftp"
+    raise SystemExit(
+        f"\nNeither port 22 (SFTP) nor 21 (FTP) is reachable on {config['host']}.\n"
+        f"Check the host, or whether a firewall is in the way. Nothing has been sent."
+    )
+
+
+def connect_sftp(config: dict):
+    """An authenticated SFTP session, by key if one is configured else password."""
+    import paramiko
+
+    client = paramiko.SSHClient()
+    # The host key isn't pinned anywhere yet, so accept and record it rather
+    # than refusing to connect. Worth pinning if this ever runs unattended.
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    key_file = config.get("key_file")
+    client.connect(
+        hostname=config["host"],
+        port=int(config.get("port", 22)),
+        username=config["user"],
+        password=config.get("password") or None,
+        key_filename=key_file or None,
+        timeout=30,
+        allow_agent=bool(key_file),
+        look_for_keys=bool(key_file),
+    )
+    print(f"  Connected to {config['host']} over SFTP.")
+    return client, client.open_sftp()
 
 
 def connect(config: dict) -> ftplib.FTP:
@@ -137,6 +199,66 @@ def remote_sizes(ftp: ftplib.FTP) -> dict:
     return sizes
 
 
+class FtpTarget:
+    """FTP/FTPS, working in the remote directory after ensure_dir()."""
+
+    def __init__(self, config):
+        self.ftp = connect(config)
+
+    def ensure_dir(self, remote_dir):
+        ensure_dir(self.ftp, remote_dir)
+
+    def sizes(self):
+        return remote_sizes(self.ftp)
+
+    def put(self, path):
+        with path.open("rb") as fh:
+            self.ftp.storbinary(f"STOR {path.name}", fh)
+
+    def delete(self, name):
+        self.ftp.delete(name)
+
+    def close(self):
+        try:
+            self.ftp.quit()
+        except Exception:
+            self.ftp.close()
+
+
+class SftpTarget:
+    """SFTP over SSH. Same surface as FtpTarget so main() doesn't branch."""
+
+    def __init__(self, config):
+        self.client, self.sftp = connect_sftp(config)
+        self.remote_dir = None
+
+    def ensure_dir(self, remote_dir):
+        self.remote_dir = remote_dir
+        built = ""
+        for part in remote_dir.strip("/").split("/"):
+            built += "/" + part
+            try:
+                self.sftp.stat(built)
+            except IOError:
+                self.sftp.mkdir(built)
+        self.sftp.chdir(remote_dir)
+
+    def sizes(self):
+        return {a.filename: a.st_size for a in self.sftp.listdir_attr(self.remote_dir)}
+
+    def put(self, path):
+        self.sftp.put(str(path), f"{self.remote_dir}/{path.name}")
+
+    def delete(self, name):
+        self.sftp.remove(f"{self.remote_dir}/{name}")
+
+    def close(self):
+        try:
+            self.sftp.close()
+        finally:
+            self.client.close()
+
+
 def main():
     data = json.loads(CONTENT_JSON.read_text(encoding="utf-8"))
     month, year = data["month"], data["year"]
@@ -174,21 +296,21 @@ def main():
         )
 
     print()
-    ftp = connect(config)
+    protocol = pick_protocol(config)
+    target = SftpTarget(config) if protocol == "sftp" else FtpTarget(config)
     try:
-        ensure_dir(ftp, remote_dir)
-        before = remote_sizes(ftp)
+        target.ensure_dir(remote_dir)
+        before = target.sizes()
 
         for f in files:
-            with f.open("rb") as fh:
-                ftp.storbinary(f"STOR {f.name}", fh)
+            target.put(f)
             was = before.get(f.name)
             state = "new" if was is None else ("unchanged" if was == f.stat().st_size else "replaced")
             print(f"    {f.name:<34} {f.stat().st_size // 1024:>5}KB  {state}")
 
         # Verify by size rather than trusting the transfer: a truncated upload
         # still "succeeds" and leaves a broken image in a sent newsletter.
-        after = remote_sizes(ftp)
+        after = target.sizes()
         bad = [f.name for f in files if after.get(f.name) != f.stat().st_size]
         if bad:
             raise SystemExit(
@@ -200,16 +322,13 @@ def main():
         extra = sorted(set(after) - {f.name for f in files})
         if extra and "--delete-extra" in sys.argv:
             for name in extra:
-                ftp.delete(name)
+                target.delete(name)
             print(f"  Deleted {len(extra)} file(s) not in this run: {', '.join(extra)}")
         elif extra:
             print(f"  Left in place, not part of this run ({len(extra)}): {', '.join(extra)}")
             print(f"  Use --delete-extra to remove them.")
     finally:
-        try:
-            ftp.quit()
-        except Exception:
-            ftp.close()
+        target.close()
 
     print(f"\nDone. The email's images now resolve at {hosted_base(month, year)}/\n")
 
