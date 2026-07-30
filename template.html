@@ -580,7 +580,14 @@
 
   /* ── 10. MARKETING HIGHLIGHTS ───────────────────────────────── */
   .sec-marketing {
-    background: linear-gradient(180deg, #FFFBF2 0%, #ffffff 100%);
+    /* Flat, not a gradient, and exactly the #FFFCF3 the email's Marketing
+       table uses. This is the one section that ships as a PNG *and* live HTML:
+       the title strip is flattened to Marketing-Highlights.png while the blog
+       cards stay real markup so they can be individually linked. A gradient
+       here left the strip's bottom edge a few points lighter than the table
+       below it, so the join showed as a step — and the taller the strip, the
+       further the gradient had run and the worse it got. */
+    background: #FFFCF3;
     padding: 48px 48px 52px;
   }
   .blog-grid {
