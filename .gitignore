@@ -7,6 +7,9 @@
 # they can still be committed if you want them backed up in git.
 */Section wise images/
 
+# FTP credentials for upload_sections.py — must never be committed
+ftp_config.json
+
 # Excel's lock file, created while a workbook is open
 ~$*
 
