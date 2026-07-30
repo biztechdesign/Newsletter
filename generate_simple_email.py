@@ -52,10 +52,15 @@ SECTIONS_SUBDIR = "Section wise images"
 def sections_dir(month: str, year: str) -> Path:
     return BASE_DIR / f"{month}-{year}" / SECTIONS_SUBDIR
 
-# Where you upload output/sections/*.png each month. The {month}/{year}
-# placeholders give every issue its own folder, so re-uploading next month
-# doesn't overwrite the images an already-sent email still points at.
+# Where you upload each month's section PNGs. The {month}/{year} placeholders
+# give every issue its own folder, so re-uploading next month doesn't overwrite
+# the images an already-sent email still points at.
+#
+# On the server this is  /home/wordpress/public_html/biztech-insider/<Month>_<Year>/
+# so July 2026 lands in  /home/wordpress/public_html/biztech-insider/July_2026/
+# Upload credentials come from Parth.
 HOSTED_SECTIONS_BASE = "https://w.indiaondesk.com/biztech-insider/{month}_{year}/"
+HOSTED_SERVER_PATH = "/home/wordpress/public_html/biztech-insider"
 
 # Long-lived email assets (logo, social icons, View All button) — these live on
 # the CMS host and are shared by every issue, so they're not regenerated.
@@ -252,7 +257,9 @@ def main():
         # Every PNG has to exist at base_url before sending.
         upload_note = sec_dir / "UPLOAD_ME.txt"
         upload_note.write_text(
-            f"Upload these {len(upload_files)} files to:\n{hosted_base(month, year)}/\n\n"
+            f"Upload these {len(upload_files)} files to:\n\n"
+            f"  server : {HOSTED_SERVER_PATH}/{month}_{year}/\n"
+            f"  url    : {hosted_base(month, year)}/\n\n"
             + "\n".join(upload_files)
             + "\n",
             encoding="utf-8",
