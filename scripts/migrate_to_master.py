@@ -24,7 +24,9 @@ import openpyxl
 
 from create_master_template import build, ensure_folders
 
-BASE_DIR = Path(__file__).parent
+# The project root — one level up now that the scripts live in scripts/.
+# Every path below (content.json, assets, month folders) hangs off it.
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Old field -> master field, where the name changed.
 RENAMED = {

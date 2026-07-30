@@ -41,7 +41,9 @@ from generate_simple_email import (
     sections_dir,
 )
 
-BASE_DIR = Path(__file__).parent
+# The project root — one level up now that the scripts live in scripts/.
+# Every path below (content.json, assets, month folders) hangs off it.
+BASE_DIR = Path(__file__).resolve().parent.parent
 CONTENT_JSON = BASE_DIR / "content.json"
 CONFIG_FILE = BASE_DIR / "ftp_config.json"
 ENV_FILE = BASE_DIR / ".env"

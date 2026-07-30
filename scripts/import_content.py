@@ -49,7 +49,10 @@ CONTENT_SHEET_ID = "1vZhE7L6O7NNAHYrsGOm8nlZjjwQtMzbu"
 ANNIV_SHEET_ID   = "19m9QWBhOqLh9pZT-u4eoaPkN9XS3hu69"
 # ──────────────────────────────────────────────────────────────────────────
 
-BASE_DIR = Path(__file__).parent
+# The project root — one level up now that the scripts live in scripts/.
+# Every path below (content.json, assets, month folders) hangs off it.
+BASE_DIR = Path(__file__).resolve().parent.parent
+SCRIPTS_DIR = Path(__file__).resolve().parent   # this folder, for launching siblings
 OUTPUT   = BASE_DIR / "content.json"
 
 # This month's local source-image folder, e.g. "July-2026/Row Data". Set by
@@ -1457,12 +1460,12 @@ def main():
     # get mailed, so they're only worth regenerating once the content in the
     # preview has been approved. Pass --all to run the whole chain in one go.
     print("\nRendering updated newsletter for review...")
-    subprocess.run([sys.executable, str(BASE_DIR / "generate.py")], check=True)
+    subprocess.run([sys.executable, str(SCRIPTS_DIR / "generate.py")], check=True)
 
     run_all = "--all" in sys.argv
     if run_all:
-        subprocess.run([sys.executable, str(BASE_DIR / "screenshot_sections.py")], check=True)
-        subprocess.run([sys.executable, str(BASE_DIR / "generate_simple_email.py")], check=True)
+        subprocess.run([sys.executable, str(SCRIPTS_DIR / "screenshot_sections.py")], check=True)
+        subprocess.run([sys.executable, str(SCRIPTS_DIR / "generate_simple_email.py")], check=True)
     else:
         print("\n" + "-" * 70)
         print("REVIEW the preview above, then run:")

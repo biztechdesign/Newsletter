@@ -37,7 +37,9 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-BASE_DIR = Path(__file__).parent
+# The project root — one level up now that the scripts live in scripts/.
+# Every path below (content.json, assets, month folders) hangs off it.
+BASE_DIR = Path(__file__).resolve().parent.parent
 CONTENT_JSON = BASE_DIR / "content.json"
 HTML_SUBDIR = "HTML"
 

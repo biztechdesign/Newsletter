@@ -36,7 +36,9 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-BASE_DIR = Path(__file__).parent.resolve()
+# The project root — one level up now that the scripts live in scripts/.
+# Every path below (content.json, assets, month folders) hangs off it.
+BASE_DIR = Path(__file__).resolve().parent.parent.resolve()
 
 POLL_SECONDS = 1.0
 # A save is only acted on once the files have stopped changing for this long —
@@ -188,7 +190,7 @@ def serve(port: int) -> ThreadingHTTPServer:
 
 def rebuild(sheet: Path) -> bool:
     result = subprocess.run(
-        [sys.executable, str(BASE_DIR / "import_content.py"), f"--sheet={sheet}"],
+        [sys.executable, str(SCRIPTS_DIR / "import_content.py"), f"--sheet={sheet}"],
         cwd=str(BASE_DIR),
     )
     return result.returncode == 0

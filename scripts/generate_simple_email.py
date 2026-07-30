@@ -40,7 +40,9 @@ from urllib.parse import quote
 from jinja2 import Environment, FileSystemLoader
 from PIL import Image
 
-BASE_DIR = Path(__file__).parent
+# The project root — one level up now that the scripts live in scripts/.
+# Every path below (content.json, assets, month folders) hangs off it.
+BASE_DIR = Path(__file__).resolve().parent.parent
 CONTENT_JSON = BASE_DIR / "content.json"
 TEMPLATES_DIR = BASE_DIR / "templates"   # the HTML layouts
 HTML_SUBDIR = "HTML"

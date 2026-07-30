@@ -20,9 +20,10 @@ Newsletter/
 ├── images/                   older photos, still served to already-sent emails
 ├── templates/                the HTML layouts — edit to change the design
 │
+├── scripts/                  the scripts — you run these, never edit them
 ├── master_template.xlsx      the blank sheet you share with contributors
 ├── .env                      your upload credentials (never committed)
-└── *.py                      the scripts, described below
+└── content.json              working state, rewritten on every run
 ```
 
 **You only ever edit two things:** `content.xlsx` and the photos in `Row Data/`.
@@ -36,7 +37,7 @@ don't edit those by hand, your changes will be overwritten.
 ### 1. Start the month
 
 ```
-python create_master_template.py August-2026/content.xlsx
+python scripts/create_master_template.py August-2026/content.xlsx
 ```
 
 Creates the sheet and all 17 photo folders. Share the sheet with the team.
@@ -54,19 +55,19 @@ the person's name from the filename).
 ### 3. Build and review
 
 ```
-python import_content.py --sheet=August-2026/content.xlsx
+python scripts/import_content.py --sheet=August-2026/content.xlsx
 ```
 
 Writes `August-2026/HTML/newsletter_August_2026.html`. Open it and check it.
 Repeat this step until it looks right — nothing is published yet.
 
-*Tip:* `python watch.py --sheet=August-2026/content.xlsx` rebuilds and reloads
+*Tip:* `python scripts/watch.py --sheet=August-2026/content.xlsx` rebuilds and reloads
 the page in your browser every time you save the sheet or add a photo.
 
 ### 4. Cut the section images
 
 ```
-python screenshot_sections.py
+python scripts/screenshot_sections.py
 ```
 
 Flattens each section to a PNG in `Section wise images/`. This is what makes
@@ -75,8 +76,8 @@ the email work in Outlook, which can't render the real layout.
 ### 5. Upload them
 
 ```
-python upload_sections.py --dry-run     check what will be sent
-python upload_sections.py               send it
+python scripts/upload_sections.py --dry-run     check what will be sent
+python scripts/upload_sections.py               send it
 ```
 
 Needs `.env` — copy `.env.example` and fill in the three values.
@@ -84,13 +85,13 @@ Needs `.env` — copy `.env.example` and fill in the three values.
 ### 6. Send
 
 ```
-python generate_simple_email.py
+python scripts/generate_simple_email.py
 ```
 
 Open `August-2026/HTML/newsletter_August_2026_simple_email.html`, select all,
 copy, paste into Gmail.
 
-Not uploaded yet and want to look first? `python generate_simple_email.py --local`
+Not uploaded yet and want to look first? `python scripts/generate_simple_email.py --local`
 writes a copy that reads the images off your disk. You can paste that into
 Gmail too — Gmail uploads the images itself.
 
