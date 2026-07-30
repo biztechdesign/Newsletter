@@ -42,7 +42,10 @@ from urllib.parse import quote
 import openpyxl
 
 # ── Configure these each month ────────────────────────────────────────────
-CONTENT_SHEET_ID = "1vZhE7L6O7NNAHYrsGOm8nlZjjwQtMzbu"
+# The live newsletter workbook: one tab per month, named like "Aug 26".
+# (The previous ID here pointed at an older copy still holding January
+# placeholder content, so a plain run silently built the wrong issue.)
+CONTENT_SHEET_ID = "1dBzfymZ6WwNXE6wG02IIVbTyDF5DRSn1yLc2BFfGPIs"
 # Anniversary file + tab are now read from the 'anniversary' row in the
 # content sheet (Drive Link column = xlsx file, Value column = tab name).
 # ANNIV_SHEET_ID below is only used as a fallback if not specified in sheet.
@@ -923,7 +926,10 @@ def parse_openings_from_cell(raw: str) -> list[dict]:
 
     A header line is detected and used to map the columns, so Position /
     Experience / Opening can be in any order; without one, that order is
-    assumed. Tab, semicolon and comma all work as the separator.
+    assumed. Tab, semicolon and comma all work as the separator, and " - "
+    is accepted last for sheets filled in that way. It is spaced on both
+    sides deliberately, so hyphenated titles ("Full-Stack Developer") and
+    experience ranges ("2-4 years") survive unsplit.
     """
     rows = []
     order = ["title", "experience", "openings"]
@@ -931,7 +937,7 @@ def parse_openings_from_cell(raw: str) -> list[dict]:
         line = line.strip()
         if not line:
             continue
-        for sep in ("\t", ";", ","):
+        for sep in ("\t", ";", ",", " - "):
             if sep in line:
                 parts = [p.strip() for p in line.split(sep)]
                 break
@@ -1002,10 +1008,88 @@ def parse_openings_sheet(wb: openpyxl.Workbook, month: str) -> list[dict]:
 
 # ── Main content sheet parser ─────────────────────────────────────────────
 
+# A month tab in the live workbook: "Aug 26", "July 26", "Nov -23".
+MONTH_TAB = re.compile(
+    r"^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*-?\s*\d{2,4}$",
+    re.IGNORECASE,
+)
+
+
+MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
+               "July", "August", "September", "October", "November", "December"]
+
+
+def normalise_month(raw: str) -> str:
+    """
+    A real month name, from whatever was typed in the sheet.
+
+    The month decides the Row Data folder that gets read, the output folder,
+    the anniversary tab, and the folder images upload into — so a typo doesn't
+    fail, it quietly builds a whole separate empty issue. "Auguest" in the live
+    sheet would have read Auguest-2026/Row Data (nothing there), and published
+    to /biztech-insider/Auguest_2026/.
+
+    An unambiguous near-miss is corrected and announced; anything else stops
+    the run rather than proceeding under a name nothing else will match.
+    """
+    import difflib
+
+    text = (raw or "").strip()
+    for name in MONTH_NAMES:
+        if text.lower() == name.lower():
+            return name
+
+    close = difflib.get_close_matches(text.title(), MONTH_NAMES, n=1, cutoff=0.7)
+    if close:
+        print(f"  WARNING: month reads {text!r} in the sheet - using {close[0]!r}. "
+              f"Fix the sheet to silence this.")
+        return close[0]
+
+    raise SystemExit(
+        f"\nThe sheet's month cell reads {text!r}, which is not a month.\n"
+        f"It decides the Row Data folder, the output folder and the upload\n"
+        f"path, so the run stops here. Set it to one of:\n  "
+        + ", ".join(MONTH_NAMES)
+    )
+
+
+def pick_tab(wb: openpyxl.Workbook) -> str:
+    """
+    Which tab holds this issue's content.
+
+    --tab="Aug 26" picks one explicitly. Otherwise the first month-named tab
+    wins, which in the live workbook is the newest — it keeps the current month
+    at the top, ahead of ~48 older ones.
+
+    Falling back to the first tab, as this used to, lands on "Newsletter Items"
+    and parses a sheet of notes as though it were content.
+    """
+    wanted = next(
+        (a.split("=", 1)[1] for a in sys.argv if a.startswith("--tab=")), None
+    )
+    if wanted:
+        if wanted not in wb.sheetnames:
+            raise SystemExit(
+                f"No tab named {wanted!r}. Available:\n  "
+                + "\n  ".join(wb.sheetnames[:20])
+            )
+        return wanted
+
+    if "Newsletter Content" in wb.sheetnames:
+        return "Newsletter Content"
+
+    for name in wb.sheetnames:
+        if MONTH_TAB.match(name.strip()):
+            print(f"  Using tab: {name!r} (newest month tab)")
+            return name
+
+    return wb.sheetnames[0]
+
+
 def parse_content_sheet(wb: openpyxl.Workbook) -> dict:
     """Parse the Newsletter Content sheet into the content.json structure."""
 
-    sheet_name = "Newsletter Content" if "Newsletter Content" in wb.sheetnames else wb.sheetnames[0]
+    sheet_name = pick_tab(wb)
     ws = wb[sheet_name]
 
     data = {
@@ -1129,7 +1213,7 @@ def parse_content_sheet(wb: openpyxl.Workbook) -> dict:
             drive = drive_cell.hyperlink.target
 
         # ── General ──────────────────────────────────────────────────────
-        if   field == "month":        data["month"] = cell_str(val)
+        if   field == "month":        data["month"] = normalise_month(cell_str(val))
         elif field == "year":         data["year"]  = str(int(float(str(val)))) if val else None
         elif field == "ceo_name":     data["ceo_desk"]["ceo_name"]  = cell_str(val)
         elif field == "ceo_title":    data["ceo_desk"]["ceo_title"] = cell_str(val)

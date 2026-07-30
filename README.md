@@ -61,8 +61,13 @@ python scripts/import_content.py --sheet=August-2026/content.xlsx
 Writes `August-2026/HTML/newsletter_August_2026.html`. Open it and check it.
 Repeat this step until it looks right — nothing is published yet.
 
-*Tip:* `python scripts/watch.py --sheet=August-2026/content.xlsx` rebuilds and reloads
-the page in your browser every time you save the sheet or add a photo.
+*Tip — auto-update:* `python scripts/watch.py --online` follows the live Google
+Sheet. Edit the sheet in your browser and the preview rebuilds and reloads by
+itself, no download and no re-running anything. It checks every 30 seconds, and
+also watches this month's `Row Data/` so new photos appear straight away.
+
+Working from a downloaded file instead? `python scripts/watch.py --sheet=August-2026/content.xlsx`
+does the same on save.
 
 ### 4. Cut the section images
 

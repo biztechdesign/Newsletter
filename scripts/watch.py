@@ -6,16 +6,19 @@ Rebuilds the newsletter automatically whenever you save the month's Excel file
 in your browser so you can see the change without touching anything.
 
 Usage:
-    python watch.py                                # picks the newest <Month>-<Year>/content.xlsx
-    python watch.py --sheet=July-2026/content.xlsx # or name it explicitly
+    python watch.py --online                       # follow the live Google Sheet
+    python watch.py                                # newest local <Month>-<Year>/content.xlsx
+    python watch.py --sheet=July-2026/content.xlsx # a specific local sheet
     python watch.py --port=8080
     python watch.py --no-open                      # don't launch a browser
 
 Stop it with Ctrl+C.
 
 What it watches:
-    <Month>-<Year>/content.xlsx     the month's content sheet
-    <Month>-<Year>/Row Data/**      that month's source photos
+    --online:  the Google Sheet itself, re-fetched every 30s, so edits made in
+               the browser show up with nothing to download or save
+    otherwise: <Month>-<Year>/content.xlsx
+    both:      <Month>-<Year>/Row Data/**   that month's source photos
 
 On any change it re-runs import_content.py, which rewrites content.json and
 re-renders the preview HTML. It deliberately does NOT re-cut the section PNGs
@@ -39,8 +42,16 @@ from urllib.parse import parse_qs, urlparse
 # The project root — one level up now that the scripts live in scripts/.
 # Every path below (content.json, assets, month folders) hangs off it.
 BASE_DIR = Path(__file__).resolve().parent.parent.resolve()
+SCRIPTS_DIR = Path(__file__).resolve().parent   # this folder, for launching siblings
+
+# Which workbook --online polls. Imported so there is one definition of it.
+sys.path.insert(0, str(SCRIPTS_DIR))
+from import_content import CONTENT_SHEET_ID  # noqa: E402
 
 POLL_SECONDS = 1.0
+# How often --online re-fetches the Google Sheet. Slower than the local poll on
+# purpose: each check downloads the whole workbook.
+ONLINE_POLL_SECONDS = 30.0
 # A save is only acted on once the files have stopped changing for this long —
 # Excel writes to a temp file and renames, so a rebuild fired at the wrong
 # instant would read a half-written workbook.
@@ -95,13 +106,53 @@ def find_sheet() -> Path:
     return candidates[0]
 
 
+def online_fingerprint() -> str | None:
+    """
+    A hash of the live sheet's *content*, or None if it can't be fetched.
+
+    Hashes the cell values of the month tab, not the downloaded file. Google's
+    xlsx export is not byte-stable — two fetches seconds apart with no edit in
+    between produce different bytes — so hashing the download would rebuild
+    every single poll, forever.
+
+    A failed fetch returns None rather than a hash, so a network blip doesn't
+    read as "changed" and trigger a pointless rebuild.
+    """
+    import hashlib
+    import io
+    import urllib.request
+
+    import openpyxl
+
+    from import_content import pick_tab
+
+    url = (f"https://docs.google.com/spreadsheets/d/{CONTENT_SHEET_ID}"
+           f"/export?format=xlsx")
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            raw = resp.read()
+        wb = openpyxl.load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
+        ws = wb[pick_tab(wb)]
+        digest = hashlib.sha256()
+        for row in ws.iter_rows(values_only=True):
+            digest.update(repr(row).encode("utf-8", "replace"))
+        wb.close()
+        return digest.hexdigest()
+    except Exception as e:
+        print(f"  (couldn't read the sheet: {e})")
+        return None
+
+
 # ── Change detection ───────────────────────────────────────────────────────
 
 def snapshot(sheet: Path, row_data: Path) -> dict:
     """Map every watched file to (mtime, size). Excel's ~$ lock files are
     ignored — they appear and vanish on their own while a workbook is open."""
     state = {}
-    targets = [sheet]
+    # sheet is None in --online mode: the workbook lives in Google Sheets, so
+    # only the photo folder exists on disk to watch.
+    targets = [sheet] if sheet is not None else []
     if row_data.is_dir():
         targets.extend(p for p in row_data.rglob("*") if p.is_file())
     for p in targets:
@@ -188,12 +239,12 @@ def serve(port: int) -> ThreadingHTTPServer:
 
 # ── Build ──────────────────────────────────────────────────────────────────
 
-def rebuild(sheet: Path) -> bool:
-    result = subprocess.run(
-        [sys.executable, str(SCRIPTS_DIR / "import_content.py"), f"--sheet={sheet}"],
-        cwd=str(BASE_DIR),
-    )
-    return result.returncode == 0
+def rebuild(sheet: Path | None) -> bool:
+    # Without --sheet, import_content.py downloads the live workbook itself.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "import_content.py")]
+    if sheet is not None:
+        cmd.append(f"--sheet={sheet}")
+    return subprocess.run(cmd, cwd=str(BASE_DIR)).returncode == 0
 
 
 def preview_url(port: int) -> str | None:
@@ -217,11 +268,24 @@ def main():
     # actually happened.
     sys.stdout.reconfigure(line_buffering=True)
 
-    sheet = find_sheet()
-    row_data = sheet.parent / "Row Data"
+    online = "--online" in sys.argv
+    sheet = None if online else find_sheet()
     port = int(arg_value("port", "8000"))
 
-    print(f"Watching sheet : {sheet}")
+    if online:
+        # No local sheet: import_content.py downloads the workbook itself, so
+        # only this month's photos are watched on disk.
+        month_dir = max(
+            (p.parent for p in BASE_DIR.glob("*/Row Data")),
+            key=lambda p: p.stat().st_mtime,
+            default=BASE_DIR,
+        )
+        row_data = month_dir / "Row Data"
+        print(f"Watching sheet : the live Google Sheet, every {int(ONLINE_POLL_SECONDS)}s")
+        print(f"                 (edit it in the browser - no download needed)")
+    else:
+        row_data = sheet.parent / "Row Data"
+        print(f"Watching sheet : {sheet}")
     print(f"Watching photos: {row_data}{'' if row_data.is_dir() else '  (not created yet)'}")
     print()
 
@@ -245,14 +309,29 @@ def main():
     print("the preview rebuilds and reloads by itself. Ctrl+C to stop.\n")
 
     state = snapshot(sheet, row_data)
+    remote = online_fingerprint() if online else None
+    last_online_check = time.monotonic()
     try:
         while True:
             time.sleep(POLL_SECONDS)
-            if snapshot(sheet, row_data) == state:
+
+            changed_locally = snapshot(sheet, row_data) != state
+            changed_online = False
+            if online and time.monotonic() - last_online_check >= ONLINE_POLL_SECONDS:
+                last_online_check = time.monotonic()
+                current = online_fingerprint()
+                # None means the fetch failed; only a real, different hash counts.
+                if current is not None and remote is not None and current != remote:
+                    changed_online = True
+                if current is not None:
+                    remote = current
+
+            if not (changed_locally or changed_online):
                 continue
 
             print("-" * 70)
-            print("Change detected - rebuilding...")
+            print("Sheet edited - rebuilding..." if changed_online
+                  else "Change detected - rebuilding...")
             state = wait_until_settled(sheet, row_data)
             ok = rebuild(sheet)
             # Re-snapshot: a rebuild can touch watched files itself, and that
