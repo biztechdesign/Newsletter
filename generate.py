@@ -27,6 +27,10 @@ OUTPUT_DIR   = BASE_DIR / "output"
 
 GITHUB_PAGES_URL = "https://biztechdesign.github.io/Newsletter/"
 
+# Sub-divider heading above the wellness banner. The same every month, so it's
+# applied automatically rather than retyped into the sheet each time.
+DEFAULT_WELLNESS_TITLE = "Wellness & HR Corner"
+
 EMBED_IMAGES   = "--embed-images" in sys.argv
 EMAIL_MODE_ARG = "--email" in sys.argv
 IMAGE_BASE_URL = (
@@ -309,6 +313,11 @@ def build():
     # HR events — dynamic list (up to 3+ events, each with its own title + photos).
     # Normalizes old single-event content.json shape too (photos lived under image_urls.event_photos).
     data["hr"] = normalize_hr(data.get("hr"), img_urls.get("event_photos", []))
+    # The divider above the wellness banner is the same heading every month, so
+    # it doesn't need typing into the sheet. Only applied when there's actually
+    # a banner for it to sit above, and an entry in the sheet still wins.
+    if hr_wellness_banner and not data["hr"]["wellness_title"]:
+        data["hr"]["wellness_title"] = DEFAULT_WELLNESS_TITLE
     # An event with neither a title nor photos is nothing to show.
     data["hr"]["events"] = [
         e for e in data["hr"]["events"]
