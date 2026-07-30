@@ -49,6 +49,12 @@ SECTIONS_SUBDIR = "Section wise images"
 # where it's used — remote source photos can be very large.
 LOAD_TIMEOUT_MS = 180_000
 
+# Pixel density the section PNGs are captured at. 1.5x keeps them sharp on a
+# retina screen at a third less weight than 2x. generate_simple_email.py
+# imports this same value to convert the PNGs' pixel dimensions back to the
+# layout size the email displays them at, so the two can never drift apart.
+CAPTURE_SCALE_FACTOR = 1.5
+
 
 def sections_dir(month: str, year: str) -> Path:
     return BASE_DIR / f"{month}-{year}" / SECTIONS_SUBDIR
@@ -191,11 +197,15 @@ def main():
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        # device_scale_factor=2 captures at 2x pixel density (retina-quality)
-        # while the images still display at their normal 800px layout width —
-        # generate_simple_email.py halves the read-back PNG dimensions to
-        # compensate when setting each <img>'s width/height attributes.
-        page = browser.new_page(viewport={"width": 900, "height": 1200}, device_scale_factor=2)
+        # Captured at 1.5x pixel density, so the PNGs stay sharp on a retina
+        # screen without the file size 2x costs. The email still displays them
+        # at their true layout size (800px wide): generate_simple_email.py
+        # divides the read-back pixel dimensions by the same factor when it
+        # sets each <img>'s width/height, so keep the two in step.
+        page = browser.new_page(
+            viewport={"width": 900, "height": 1200},
+            device_scale_factor=CAPTURE_SCALE_FACTOR,
+        )
         # Generous timeouts: every section has to be fully painted before it's
         # captured, and photos served from GitHub Pages can be tens of MB each
         # (a single 18MB event photo takes ~20s on its own), so the default

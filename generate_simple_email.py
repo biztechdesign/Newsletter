@@ -101,10 +101,13 @@ SECTIONS_BEFORE_MARKETING = [
 SECTIONS_AFTER_MARKETING = []
 
 
-# Must match screenshot_sections.py's device_scale_factor — the PNGs are
-# captured at 2x pixel density for retina-quality images, so their actual
-# pixel dimensions need to be halved back down to CSS/layout pixels here.
-CAPTURE_SCALE_FACTOR = 2
+# The width every full-width section is laid out at, and displayed at in the
+# email. Section PNGs are captured at some multiple of this for sharpness on
+# retina screens, so dividing a PNG's pixel width by it recovers the capture
+# density — see capture_scale(). Derived rather than hardcoded so the email can
+# never disagree with whatever density the PNGs were actually captured at.
+SECTION_DISPLAY_WIDTH = 800
+FALLBACK_SCALE = 1.5
 
 # Rendered width of a blog card in the final email: the 800px table has 50px
 # side padding and each of the two cells adds 15px either side, leaving
@@ -113,12 +116,33 @@ CAPTURE_SCALE_FACTOR = 2
 BLOG_DISPLAY_WIDTH = 320
 
 
-def png_size(path: Path) -> tuple[int, int]:
-    """Returns (width, height) in CSS pixels — i.e. already divided back down
-    from the PNG's actual (2x) pixel dimensions."""
+def capture_scale(sec_dir: Path) -> float:
+    """
+    The pixel density the section PNGs were captured at, read off a full-width
+    one: every such section is laid out at SECTION_DISPLAY_WIDTH, so its PNG's
+    pixel width divided by that is the density.
+
+    Measured rather than assumed. A hardcoded factor that disagreed with the
+    actual capture would rescale every image in the email — by a third, if the
+    capture moved between 1.5x and 2x — and the email would still look
+    plausible, just subtly wrong throughout.
+    """
+    for path in sorted(sec_dir.glob("*.png")):
+        if path.stem.startswith("blog-"):
+            continue        # blog cards are not full-width
+        with Image.open(path) as im:
+            width = im.size[0]
+        if width >= SECTION_DISPLAY_WIDTH:
+            return width / SECTION_DISPLAY_WIDTH
+    return FALLBACK_SCALE
+
+
+def png_size(path: Path, scale: float) -> tuple[int, int]:
+    """The size a PNG should be displayed at, in CSS pixels: its pixel
+    dimensions divided back down by the density it was captured at."""
     with Image.open(path) as im:
         w, h = im.size
-        return w // CAPTURE_SCALE_FACTOR, h // CAPTURE_SCALE_FACTOR
+    return round(w / scale), round(h / scale)
 
 
 def hosted_base(month: str, year: str) -> str:
@@ -140,14 +164,14 @@ def expand_parts(stem: str, sec_dir: Path) -> list[str]:
     return numbered or [stem]
 
 
-def resolve_sections(pairs, base_url, sec_dir):
+def resolve_sections(pairs, base_url, sec_dir, scale):
     resolved = []
     for stem_base, alt in pairs:
         for stem in expand_parts(stem_base, sec_dir):
             path = sec_dir / f"{stem}.png"
             if not path.exists():
                 continue
-            _w, h = png_size(path)
+            _w, h = png_size(path, scale)
             resolved.append({
                 "url": f"{base_url}/{stem}.png",
                 "alt": alt,
@@ -156,11 +180,11 @@ def resolve_sections(pairs, base_url, sec_dir):
     return resolved
 
 
-def resolve_marketing(base_url, data, sec_dir):
+def resolve_marketing(base_url, data, sec_dir, scale):
     bg_path = sec_dir / "Marketing-Highlights.png"
     if not bg_path.exists():
         return None
-    _w, bg_h = png_size(bg_path)
+    _w, bg_h = png_size(bg_path, scale)
 
     links_path = sec_dir / "marketing_links.json"
     links = json.loads(links_path.read_text(encoding="utf-8")) if links_path.exists() else []
@@ -174,7 +198,7 @@ def resolve_marketing(base_url, data, sec_dir):
     blogs = []
     blog_paths = sorted(sec_dir.glob("blog-*.png"), key=lambda p: p.name)
     for i, path in enumerate(blog_paths):
-        w, h = png_size(path)
+        w, h = png_size(path, scale)
         href = href_by_name.get(path.name, "#")
         # Scale the captured card down to its rendered width, keeping aspect.
         display_h = round(h * BLOG_DISPLAY_WIDTH / w) if w else h
@@ -215,9 +239,10 @@ def main():
             f"{sec_dir} not found — run 'python screenshot_sections.py' first to cut the section images."
         )
 
-    sections_before = resolve_sections(SECTIONS_BEFORE_MARKETING, base_url, sec_dir)
-    sections_after = resolve_sections(SECTIONS_AFTER_MARKETING, base_url, sec_dir)
-    marketing = resolve_marketing(base_url, data, sec_dir)
+    scale = capture_scale(sec_dir)
+    sections_before = resolve_sections(SECTIONS_BEFORE_MARKETING, base_url, sec_dir, scale)
+    sections_after = resolve_sections(SECTIONS_AFTER_MARKETING, base_url, sec_dir, scale)
+    marketing = resolve_marketing(base_url, data, sec_dir, scale)
 
     env = Environment(loader=FileSystemLoader(str(BASE_DIR)))
     template = env.get_template("template_simple_email.html")
