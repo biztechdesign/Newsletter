@@ -614,8 +614,10 @@
     color: #1a1a1a;
     line-height: 1.5;
     padding: 14px;
-    min-height: 95px;
     box-sizing: border-box;
+    /* No min-height: it forced ~95px whatever the title's length, leaving dead
+       space under even a two-line title. The cards are grid items stretched to
+       a common row height already, so they stay level without it. */
   }
   .blog-view-all {
     text-align: center;

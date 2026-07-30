@@ -508,6 +508,73 @@ def parse_named_images(files: list[dict]) -> list[dict]:
     return [{"name": f["stem"], "image_url": f["url"]} for f in files]
 
 
+# Words that appear in exported filenames without saying anything about which
+# post the picture belongs to.
+_IMAGE_NOISE = {
+    "scaled", "copy", "final", "image", "img", "photo", "blog", "banner",
+    "thumbnail", "thumb", "with", "and", "the", "for", "from", "a", "an",
+    "in", "of", "to", "on", "at", "is", "it", "by", "www", "biztechcs", "com",
+    "https", "http", "blogs",
+}
+
+
+def _words(text: str) -> set[str]:
+    """Lowercase words worth comparing, from a URL slug or a filename."""
+    return {
+        w for w in re.split(r"[^a-z0-9]+", text.lower())
+        if len(w) > 2 and w not in _IMAGE_NOISE and not w.isdigit()
+    }
+
+
+def match_blog_images(posts: list[dict], images: list[dict]) -> list[dict]:
+    """
+    Pair each blog post with the folder image whose filename best matches its
+    URL slug. Returns the images reordered to line up with *posts*.
+
+    Folder order is alphabetical, which has no reason to match the order the
+    posts were pasted in: 'Go-Live-Checklist…' sorts after 'Data-Structure…'
+    even though its post came first, so pairing by index silently put each
+    title under the other post's picture — and the result looks completely
+    normal, which is what makes it worth doing properly.
+
+    Anything that can't be matched confidently keeps folder order, so this can
+    only improve on the previous behaviour, never scramble a correct pairing.
+    """
+    if not posts or not images:
+        return images
+
+    remaining = list(images)
+    matched: dict[int, dict] = {}
+
+    # Best match first, so a strong pairing isn't stolen by a weaker one.
+    scores = []
+    for pi, post in enumerate(posts):
+        target = _words(post.get("url", "") or post.get("title", ""))
+        for image in images:
+            overlap = len(target & _words(Path(image["name"]).stem))
+            if overlap >= 2:
+                scores.append((overlap, pi, image))
+    scores.sort(key=lambda s: -s[0])
+
+    for _overlap, pi, image in scores:
+        if pi in matched or image not in remaining:
+            continue
+        matched[pi] = image
+        remaining.remove(image)
+
+    ordered = []
+    for pi in range(len(posts)):
+        if pi in matched:
+            ordered.append(matched[pi])
+        elif remaining:
+            ordered.append(remaining.pop(0))
+    ordered.extend(remaining)
+
+    if matched:
+        print(f"    blogs: matched {len(matched)} image(s) to posts by name")
+    return ordered
+
+
 def resolve_all_images(data: dict):
     """
     Walk all image URL fields in data and resolve folder/Drive/GitHub URLs
@@ -642,12 +709,13 @@ def resolve_all_images(data: dict):
         print(f"    {key}: {len(gallery['photos'])} photo(s)"
               f"{' - ' + gallery['title'] if gallery['title'] else ''}")
 
-    # Blog images — a local folder in filename order, one per post.
+    # Blog images — matched to posts by name, not folder order.
     posts = data["marketing"]["blog_posts"]
     blog_images = next(
         (f for p in posts if (f := files_from_local_path(p.get("image_url", "")))),
         [],
     ) or local_files(ROW_DATA_FOLDERS["blogs"])
+    blog_images = match_blog_images(posts, blog_images)
 
     # Otherwise: if multiple blogs share a folder URL, assign images by index
     folder_cache: dict[str, list[str]] = {}
