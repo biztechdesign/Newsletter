@@ -5,6 +5,25 @@ produces an email that renders in both Gmail and Outlook.
 
 ---
 
+## How it works
+
+Two sources, and only two:
+
+| | |
+|---|---|
+| **Text** | the live Google Sheet — one tab per month (`Aug 26`, `July 26`, …) |
+| **Images** | this machine — `<Month>-<Year>/Row Data/` |
+
+Nothing is fetched from GitHub or Drive. The sheet's **Photos Folder** column
+names the local folder each section reads, so a photo only has to be dropped in
+the right folder — no links, no uploading anywhere first.
+
+The images are published later, but that happens at the end: `screenshot_sections.py`
+flattens each section to a PNG and `upload_sections.py` sends those to the image
+host. The source photos themselves never leave your machine.
+
+---
+
 ## What's in this folder
 
 ```
