@@ -23,6 +23,7 @@ from jinja2 import Environment, FileSystemLoader
 BASE_DIR     = Path(__file__).parent
 CONTENT_FILE = BASE_DIR / "content.json"
 ASSETS_DIR   = BASE_DIR / "assets"
+TEMPLATES_DIR = BASE_DIR / "templates"   # the HTML layouts
 IMAGES_DIR   = BASE_DIR / "images"
 
 # Everything an issue produces lives in its own month folder, beside the sheet
@@ -402,7 +403,7 @@ def build():
         show[key] = False
 
     # ── Render template ──────────────────────────────────────────
-    env = Environment(loader=FileSystemLoader(str(BASE_DIR)))
+    env = Environment(loader=FileSystemLoader(str(TEMPLATES_DIR)))
     tpl = env.get_template(TEMPLATE)
 
     html = tpl.render(

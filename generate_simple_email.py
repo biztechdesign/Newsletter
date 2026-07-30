@@ -42,6 +42,7 @@ from PIL import Image
 
 BASE_DIR = Path(__file__).parent
 CONTENT_JSON = BASE_DIR / "content.json"
+TEMPLATES_DIR = BASE_DIR / "templates"   # the HTML layouts
 HTML_SUBDIR = "HTML"
 
 
@@ -250,7 +251,7 @@ def main():
     sections_after = resolve_sections(SECTIONS_AFTER_MARKETING, base_url, sec_dir, scale)
     marketing = resolve_marketing(base_url, data, sec_dir, scale)
 
-    env = Environment(loader=FileSystemLoader(str(BASE_DIR)))
+    env = Environment(loader=FileSystemLoader(str(TEMPLATES_DIR)))
     template = env.get_template("template_simple_email.html")
     html = template.render(
         month=month,
