@@ -46,6 +46,11 @@ CONTENT_JSON = BASE_DIR / "content.json"
 CONFIG_FILE = BASE_DIR / "ftp_config.json"
 ENV_FILE = BASE_DIR / ".env"
 
+# Host keys pinned for this project, alongside ~/.ssh/known_hosts. Written only
+# by an explicit --trust-host run; every other run verifies against it and
+# refuses an unrecognised key.
+KNOWN_HOSTS = BASE_DIR / ".ssh_known_hosts"
+
 
 def read_env_file(path: Path) -> dict:
     """
@@ -134,26 +139,83 @@ def pick_protocol(config: dict) -> str:
     )
 
 
-def connect_sftp(config: dict):
-    """An authenticated SFTP session, by key if one is configured else password."""
+def server_fingerprint(host: str, port: int) -> tuple[str, str]:
+    """(key type, SHA256 fingerprint) of the host's SSH key, without logging in."""
+    import base64
+    import hashlib
+
     import paramiko
 
+    transport = paramiko.Transport((host, port))
+    try:
+        transport.start_client(timeout=15)
+        key = transport.get_remote_server_key()
+    finally:
+        transport.close()
+    digest = base64.b64encode(hashlib.sha256(key.asbytes()).digest()).decode().rstrip("=")
+    return key.get_name(), f"SHA256:{digest}"
+
+
+def connect_sftp(config: dict):
+    """
+    An authenticated SFTP session, by key if one is configured else password.
+
+    The host key is verified against known_hosts, and an unrecognised one is
+    refused. Accepting any key would mean handing the server password to
+    whoever answered — the credentials go over this connection, so an
+    unverified endpoint is the whole risk, not a formality.
+
+    Pinning happens once, deliberately: run with --trust-host to record the
+    fingerprint after checking it, and every later run verifies against it.
+    """
+    import paramiko
+
+    host = config["host"]
+    port = int(config.get("port", 22))
+
     client = paramiko.SSHClient()
-    # The host key isn't pinned anywhere yet, so accept and record it rather
-    # than refusing to connect. Worth pinning if this ever runs unattended.
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.load_system_host_keys()                      # ~/.ssh/known_hosts
+    if KNOWN_HOSTS.is_file():
+        client.load_host_keys(str(KNOWN_HOSTS))         # this project's pins
+
+    trusting = "--trust-host" in sys.argv
+    if trusting:
+        kind, fingerprint = server_fingerprint(host, port)
+        print(f"  --trust-host: recording {host} {kind} {fingerprint}")
+        print(f"                confirm this matches the server before relying on it.")
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    else:
+        client.set_missing_host_key_policy(paramiko.RejectPolicy())
+
     key_file = config.get("key_file")
-    client.connect(
-        hostname=config["host"],
-        port=int(config.get("port", 22)),
-        username=config["user"],
-        password=config.get("password") or None,
-        key_filename=key_file or None,
-        timeout=30,
-        allow_agent=bool(key_file),
-        look_for_keys=bool(key_file),
-    )
-    print(f"  Connected to {config['host']} over SFTP.")
+    try:
+        client.connect(
+            hostname=host,
+            port=port,
+            username=config["user"],
+            password=config.get("password") or None,
+            key_filename=key_file or None,
+            timeout=30,
+            allow_agent=bool(key_file),
+            look_for_keys=bool(key_file),
+        )
+    except paramiko.SSHException as e:
+        if "not found in known_hosts" not in str(e).lower():
+            raise
+        kind, fingerprint = server_fingerprint(host, port)
+        raise SystemExit(
+            f"\nThe host key for {host} is not pinned, so the connection was refused\n"
+            f"rather than sending the password to an unverified server.\n\n"
+            f"  {kind}  {fingerprint}\n\n"
+            f"If that matches the server, pin it once with:\n"
+            f"  python upload_sections.py --trust-host\n"
+        ) from None
+
+    if trusting:
+        client.save_host_keys(str(KNOWN_HOSTS))
+        print(f"  Pinned in {KNOWN_HOSTS.name}; later runs verify against it.")
+
+    print(f"  Connected to {host} over SFTP.")
     return client, client.open_sftp()
 
 
