@@ -1,14 +1,14 @@
 """
 screenshot_sections.py
 =======================
-Renders the browser-preview newsletter HTML (output/newsletter_<Month>_<Year>.html)
-and saves one 2x PNG per section into "<Month>-<Year>/Section wise images",
+Renders the browser-preview newsletter HTML (<Month>-<Year>/HTML/newsletter_<Month>_<Year>.html)
+and saves one PNG per section into "<Month>-<Year>/Section wise images",
 alongside that month's "Row Data" source-photo folder.
 
 Reads month/year from content.json, so it always targets the current month's
 output file. Skips sections that are absent or hidden this month (e.g. an
 empty New Openings), and clears out any stale PNGs from a previous run first
-so output/sections/ never shows a section that isn't in the current issue.
+so the folder never shows a section that isn't in the current issue.
 
 Filenames follow the naming convention from Biztech's existing "flat image
 per section" Outlook-safe email format (e.g. HR-INSIDER.png, new-openings.png)
@@ -39,7 +39,12 @@ from playwright.sync_api import sync_playwright
 
 BASE_DIR = Path(__file__).parent
 CONTENT_JSON = BASE_DIR / "content.json"
-OUTPUT_DIR = BASE_DIR / "output"
+HTML_SUBDIR = "HTML"
+
+
+def html_dir(month: str, year: str) -> Path:
+    """Where generate.py writes the rendered newsletter for this issue."""
+    return BASE_DIR / f"{month}-{year}" / HTML_SUBDIR
 
 # Per-issue output folder, e.g. "July-2026/Section wise images", alongside the
 # "Row Data" folder holding that month's source photos.
@@ -50,9 +55,9 @@ SECTIONS_SUBDIR = "Section wise images"
 LOAD_TIMEOUT_MS = 180_000
 
 # Pixel density the section PNGs are captured at. 1.5x keeps them sharp on a
-# retina screen at a third less weight than 2x. generate_simple_email.py
-# imports this same value to convert the PNGs' pixel dimensions back to the
-# layout size the email displays them at, so the two can never drift apart.
+# retina screen at a third less weight than 2x. generate_simple_email.py does
+# not copy this number — it measures the density off the PNGs themselves, so
+# changing it here is enough and the two cannot disagree.
 CAPTURE_SCALE_FACTOR = 1.5
 
 
@@ -184,7 +189,7 @@ def save_marketing_highlights(page, out_dir):
 def main():
     data = json.loads(CONTENT_JSON.read_text(encoding="utf-8"))
     month, year = data["month"], data["year"]
-    html_path = OUTPUT_DIR / f"newsletter_{month}_{year}.html"
+    html_path = html_dir(month, year) / f"newsletter_{month}_{year}.html"
     if not html_path.exists():
         raise SystemExit(
             f"{html_path} not found — run 'python generate.py' first to render the browser-preview HTML."

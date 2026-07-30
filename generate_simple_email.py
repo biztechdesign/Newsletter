@@ -42,7 +42,12 @@ from PIL import Image
 
 BASE_DIR = Path(__file__).parent
 CONTENT_JSON = BASE_DIR / "content.json"
-OUTPUT_DIR = BASE_DIR / "output"
+HTML_SUBDIR = "HTML"
+
+
+def html_dir(month: str, year: str) -> Path:
+    """Everything an issue produces sits in its own month folder."""
+    return BASE_DIR / f"{month}-{year}" / HTML_SUBDIR
 
 # Per-issue folder written by screenshot_sections.py, e.g.
 # "July-2026/Section wise images".
@@ -76,7 +81,7 @@ SOCIAL_ICONS = {
     "dribbble":  CMS_ASSETS + "DRIBBBLE.png",
 }
 
-# (filename stem in output/sections/, alt text) — canonical newsletter order,
+# (filename stem in "<Month>-<Year>/Section wise images", alt text) — canonical order,
 # matching template.html so the approved browser preview and the final email
 # always show the sections in the same sequence. Header/Footer are excluded
 # (real HTML) and Marketing Highlights is special-cased.
@@ -223,6 +228,7 @@ def main():
     data = json.loads(CONTENT_JSON.read_text(encoding="utf-8"))
     month, year = data["month"], data["year"]
     sec_dir = sections_dir(month, year)
+    out_dir = html_dir(month, year)
 
     # --local points the <img> tags at the PNGs on this machine instead of the
     # server, so the email can be checked (or pasted into Gmail, which uploads
@@ -230,7 +236,7 @@ def main():
     # file so the sendable, server-hosted one is never overwritten by it.
     local_mode = "--local" in sys.argv
     if local_mode:
-        rel = os.path.relpath(sec_dir, OUTPUT_DIR).replace("\\", "/")
+        rel = os.path.relpath(sec_dir, out_dir).replace("\\", "/")
         base_url = quote(rel)
     else:
         base_url = hosted_base(month, year)
@@ -263,9 +269,9 @@ def main():
         marketing=marketing,
     )
 
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
     suffix = "_simple_email_LOCAL" if local_mode else "_simple_email"
-    out_file = OUTPUT_DIR / f"newsletter_{month}_{year}{suffix}.html"
+    out_file = out_dir / f"newsletter_{month}_{year}{suffix}.html"
     out_file.write_text(html, encoding="utf-8")
 
     all_stems = [s for s, _ in SECTIONS_BEFORE_MARKETING] + [s for s, _ in SECTIONS_AFTER_MARKETING]

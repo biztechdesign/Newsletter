@@ -6,7 +6,7 @@ Usage:
     python generate.py --email      → Gmail-ready HTML (GitHub Pages URLs)
     python generate.py --embed-images → single-file HTML (data URIs)
 
-Output: output/newsletter_<Month>_<Year>.html
+Output: <Month>-<Year>/HTML/newsletter_<Month>_<Year>.html
 """
 
 import json
@@ -16,6 +16,7 @@ import sys
 import base64
 import mimetypes
 from pathlib import Path
+from urllib.parse import quote
 from jinja2 import Environment, FileSystemLoader
 
 # ── Config ──────────────────────────────────────────────────────────────────
@@ -23,7 +24,23 @@ BASE_DIR     = Path(__file__).parent
 CONTENT_FILE = BASE_DIR / "content.json"
 ASSETS_DIR   = BASE_DIR / "assets"
 IMAGES_DIR   = BASE_DIR / "images"
-OUTPUT_DIR   = BASE_DIR / "output"
+
+# Everything an issue produces lives in its own month folder, beside the sheet
+# and the photos it was built from:
+#     July-2026/content.xlsx
+#     July-2026/Row Data/
+#     July-2026/Section wise images/
+#     July-2026/HTML/            <- the rendered newsletter
+HTML_SUBDIR = "HTML"
+
+# Set by build() once month/year are known. Image paths in the rendered HTML are
+# written relative to this folder, so they resolve both from disk and over
+# watch.py's local server.
+HTML_OUT_DIR: Path | None = None
+
+
+def html_dir(month: str, year: str) -> Path:
+    return BASE_DIR / f"{month}-{year}" / HTML_SUBDIR
 
 GITHUB_PAGES_URL = "https://biztechdesign.github.io/Newsletter/"
 
@@ -61,7 +78,11 @@ def img_src(path: Path | None) -> str:
     if IMAGE_BASE_URL:
         rel = path.relative_to(BASE_DIR).as_posix()
         return f"{IMAGE_BASE_URL.rstrip('/')}/{rel}"
-    return f"../{path.relative_to(BASE_DIR).as_posix()}"
+    # Relative to the folder the HTML is written into, computed rather than
+    # assumed: the output moved from output/ down into <Month>-<Year>/HTML/, so
+    # a hardcoded "../" now points one level short of the project root.
+    base = HTML_OUT_DIR or (BASE_DIR / HTML_SUBDIR)
+    return quote(os.path.relpath(path, base).replace("\\", "/"))
 
 
 def first_image(folder: Path) -> Path | None:
@@ -261,6 +282,10 @@ def build():
     month = data["month"]
     year  = data["year"]
 
+    # Set before any img_src() call, which writes paths relative to it.
+    global HTML_OUT_DIR
+    HTML_OUT_DIR = html_dir(month, year)
+
     # ── Resolve images ───────────────────────────────────────────
 
     # Fixed assets
@@ -436,14 +461,14 @@ def build():
             pass
 
     # ── Write output ─────────────────────────────────────────────
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    HTML_OUT_DIR.mkdir(parents=True, exist_ok=True)
     if EMBED_IMAGES:
         suffix = "_embedded"
     elif IMAGE_BASE_URL:
         suffix = "_email"
     else:
         suffix = ""
-    out_file = OUTPUT_DIR / f"newsletter_{month}_{year}{suffix}.html"
+    out_file = HTML_OUT_DIR / f"newsletter_{month}_{year}{suffix}.html"
     out_file.write_text(html, encoding="utf-8")
 
     # Same order as the master sheet everyone fills in, which is also the

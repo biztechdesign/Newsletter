@@ -37,7 +37,6 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 BASE_DIR = Path(__file__).parent.resolve()
-OUTPUT_DIR = BASE_DIR / "output"
 
 POLL_SECONDS = 1.0
 # A save is only acted on once the files have stopped changing for this long —
@@ -197,8 +196,9 @@ def rebuild(sheet: Path) -> bool:
 
 def preview_url(port: int) -> str | None:
     """Newest rendered preview, as a URL under the server root."""
+    # Each issue writes into its own "<Month>-<Year>/HTML" folder.
     previews = sorted(
-        (p for p in OUTPUT_DIR.glob("newsletter_*.html") if "_email" not in p.name),
+        (p for p in BASE_DIR.glob("*/HTML/newsletter_*.html") if "_email" not in p.name),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )

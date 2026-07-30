@@ -353,19 +353,20 @@ def local_ref(p: Path) -> str:
     """
     How the rendered HTML should reference a local image.
 
-    Relative to output/, where the HTML is written — NOT an absolute file://
-    URI. The preview is served over http://127.0.0.1 by watch.py, and browsers
-    refuse to load file:// subresources from an http:// page, so absolute URIs
-    render as broken images there while working fine when opened from disk.
-    A relative path works both ways. Spaces and the like are percent-encoded,
-    since 'Row Data' and most photo names contain them.
+    A path relative to the folder the HTML is written into — NOT an absolute
+    file:// URI. The preview is served over http://127.0.0.1 by watch.py, and
+    browsers refuse to load file:// subresources from an http:// page, so
+    absolute URIs render as broken images there while working fine when opened
+    from disk. A relative path works both ways. Spaces and the like are
+    percent-encoded, since 'Row Data' and most photo names contain them.
     """
     resolved = p.resolve()
-    try:
-        rel = resolved.relative_to(BASE_DIR).as_posix()
-    except ValueError:
+    if not resolved.is_relative_to(BASE_DIR):
         return resolved.as_uri()   # outside the project; nothing better available
-    return "../" + quote(rel)
+    # The HTML lands in "<Month>-<Year>/HTML" next to this month's Row Data, so
+    # the path is measured from there rather than assuming a fixed "../" depth.
+    html_dir = (ROW_DATA_DIR.parent if ROW_DATA_DIR else BASE_DIR) / "HTML"
+    return quote(os.path.relpath(resolved, html_dir).replace("\\", "/"))
 
 
 def browser_renderable(p: Path) -> bool:
