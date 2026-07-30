@@ -53,8 +53,9 @@ LOAD_TIMEOUT_MS = 180_000
 def sections_dir(month: str, year: str) -> Path:
     return BASE_DIR / f"{month}-{year}" / SECTIONS_SUBDIR
 
-# (output filename, CSS selector in template.html) — Header/Footer excluded,
-# Marketing Highlights handled separately by save_marketing_highlights().
+# (output filename, CSS selector in template.html) — Header/Footer excluded.
+# Marketing Highlights and HR Insider are handled separately, by
+# save_marketing_highlights() and save_hr_parts().
 SECTIONS = [
     ("Director-desk", "section.sec-ceo"),
     ("Whistle-Blow", "section.sec-campaign"),
@@ -62,7 +63,6 @@ SECTIONS = [
     ("Newly-Added-Customers", "section.sec-new-customers"),
     ("Delivery-Insights", "section.sec-delivery"),
     ("Acknowledging-Excellence", "section.sec-excellence"),
-    ("HR-INSIDER", "section.sec-hr"),
     ("Rewards-Recognitions", "section.sec-rewards"),
     ("NEW-ADDITION", "section.sec-new-joinees"),
     ("WORK-ANNIVERSARY", "section.sec-anniversaries"),
@@ -72,6 +72,58 @@ SECTIONS = [
     ("Employee-Workshop", "section.sec-workshop"),
     ("Upcoming-Event-Announcement", "section.sec-announcements"),
 ]
+
+
+def save_hr_parts(page, out_dir):
+    """
+    Cut .sec-hr into one image per sub-titled block: the Wellness & HR Corner
+    heading and banner, then each HR event. Saved as HR-INSIDER-1.png,
+    HR-INSIDER-2.png, … in order.
+
+    HR Insider is the one section holding several sub-titled blocks, so as a
+    single flat image it grows without limit — with a full set of event photos
+    it reached 2747 CSS px and 7.2MB, over half the finished email's weight.
+    Its own sub-dividers are the natural seams, so each block becomes its own
+    image and the email stacks them back with no visible join.
+
+    Returns the list of paths written, or None if the section isn't in this
+    issue. A section with a single block yields a single image, so nothing is
+    split needlessly.
+    """
+    section = page.query_selector("section.sec-hr")
+    if section is None or not section.is_visible():
+        return None
+
+    # Measure from the top: bounding_box() and a plain screenshot clip are both
+    # viewport-relative, so a scrolled page silently truncates the capture.
+    page.evaluate("window.scrollTo(0, 0)")
+    box = section.bounding_box()
+    dividers = page.query_selector_all("section.sec-hr .sub-divider")
+
+    top, bottom = box["y"], box["y"] + box["height"]
+    # The first divider belongs to the opening block, under the section title;
+    # every later one starts a new block. GAP keeps the divider's own line from
+    # being clipped by the cut above it.
+    GAP = 24
+    cuts = [top]
+    for divider in dividers[1:]:
+        cuts.append(max(top, divider.bounding_box()["y"] - GAP))
+    cuts.append(bottom)
+
+    paths = []
+    for i in range(len(cuts) - 1):
+        height = cuts[i + 1] - cuts[i]
+        if height <= 1:
+            continue
+        path = out_dir / f"HR-INSIDER-{len(paths) + 1}.png"
+        page.screenshot(
+            path=str(path),
+            type="png",
+            full_page=True,
+            clip={"x": box["x"], "y": cuts[i], "width": box["width"], "height": height},
+        )
+        paths.append(path)
+    return paths
 
 
 def save_marketing_highlights(page, out_dir):
@@ -161,6 +213,12 @@ def main():
             out_path = out_dir / f"{name}.png"
             el.screenshot(path=str(out_path), type="png")
             saved.append(out_path)
+
+        hr_parts = save_hr_parts(page, out_dir)
+        if hr_parts is None:
+            skipped.append("HR-INSIDER")
+        else:
+            saved.extend(hr_parts)
 
         marketing_result = save_marketing_highlights(page, out_dir)
         if marketing_result is None:

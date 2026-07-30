@@ -117,18 +117,34 @@ def hosted_base(month: str, year: str) -> str:
     return HOSTED_SECTIONS_BASE.format(month=month, year=year).rstrip("/")
 
 
+def expand_parts(stem: str, sec_dir: Path) -> list[str]:
+    """
+    The filename stems for a section, in order.
+
+    HR Insider is cut into one image per sub-titled block (HR-INSIDER-1,
+    HR-INSIDER-2, …), so it contributes several stems where every other section
+    contributes one. Stacked in order they rejoin with no visible seam.
+    """
+    numbered = sorted(
+        (p.stem for p in sec_dir.glob(f"{stem}-*.png")),
+        key=lambda s: int(s.rsplit("-", 1)[1]) if s.rsplit("-", 1)[1].isdigit() else 0,
+    )
+    return numbered or [stem]
+
+
 def resolve_sections(pairs, base_url, sec_dir):
     resolved = []
-    for stem, alt in pairs:
-        path = sec_dir / f"{stem}.png"
-        if not path.exists():
-            continue
-        _w, h = png_size(path)
-        resolved.append({
-            "url": f"{base_url}/{stem}.png",
-            "alt": alt,
-            "height": h,
-        })
+    for stem_base, alt in pairs:
+        for stem in expand_parts(stem_base, sec_dir):
+            path = sec_dir / f"{stem}.png"
+            if not path.exists():
+                continue
+            _w, h = png_size(path)
+            resolved.append({
+                "url": f"{base_url}/{stem}.png",
+                "alt": alt,
+                "height": h,
+            })
     return resolved
 
 
@@ -209,7 +225,12 @@ def main():
     out_file.write_text(html, encoding="utf-8")
 
     all_stems = [s for s, _ in SECTIONS_BEFORE_MARKETING] + [s for s, _ in SECTIONS_AFTER_MARKETING]
-    included = [s for s in all_stems if (sec_dir / f"{s}.png").exists()]
+    # Checked through expand_parts so a split section counts as present: HR
+    # Insider ships as HR-INSIDER-1/-2/-… and has no HR-INSIDER.png of its own.
+    included = [
+        s for s in all_stems
+        if any((sec_dir / f"{part}.png").exists() for part in expand_parts(s, sec_dir))
+    ]
     skipped = [s for s in all_stems if s not in included]
 
     # Every PNG in the section folder has to exist at base_url before sending.
