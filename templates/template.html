@@ -335,6 +335,11 @@
     width: 100%;
     aspect-ratio: 4 / 3;
     object-fit: cover;
+    /* Crop from above centre. Award photos are portrait phone shots where the
+       group stands mid-frame, so a centred 4:3 crop clips the tallest heads
+       against the title stripe. Biasing upwards keeps the headroom and gives
+       away floor instead. */
+    object-position: center 25%;
     display: block;
   }
   .award-card-footer {

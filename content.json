@@ -41,7 +41,40 @@
     ]
   },
   "rewards": {
-    "awards": []
+    "awards": [
+      {
+        "title": "Appreciation Award",
+        "folder": "",
+        "recipients": [
+          {
+            "name": "Anjana Solanki",
+            "designation": "Team Lead",
+            "image_url": "../Row%20Data/awards/Appreciation%20Award%20-%20Anjana%20Solanki%20-%20Team%20Lead.jpg"
+          },
+          {
+            "name": "Khushbu Dave",
+            "designation": "Sr. Software Engineer",
+            "image_url": "../Row%20Data/awards/Appreciation%20Award%20-%20Khushbu%20Dave%20-%20Sr.%20Software%20Engineer.jpg"
+          },
+          {
+            "name": "Nirav Joshi",
+            "designation": "Business Development Executive",
+            "image_url": "../Row%20Data/awards/Appreciation%20Award%20-%20Nirav%20Joshi%20-%20Business%20Development%20Executive.jpeg"
+          }
+        ]
+      },
+      {
+        "title": "Project Excellence Award",
+        "folder": "",
+        "recipients": [
+          {
+            "name": "Chive Project Team (Harsh, Nirali, Nidhi, Shreenath, Arjun)",
+            "designation": "",
+            "image_url": "../Row%20Data/awards/Project%20Excellence%20Award%20-%20Chive%20Project%20Team%20%28Harsh%2C%20Nirali%2C%20Nidhi%2C%20Shreenath%2C%20Arjun%29.jpg"
+          }
+        ]
+      }
+    ]
   },
   "anniversaries": [
     {
@@ -184,7 +217,7 @@
   },
   "image_urls": {
     "ceo_photo": "../Row%20Data/ceo/Maulik03-1.png",
-    "campaign_banner": "../Row%20Data/campaign_banner/ChatGPT%20Image%20Jul%2029%2C%202026%2C%2011_22_34%20AM.png",
+    "campaign_banner": "../Row%20Data/campaign_banner/ChatGPT%20Image%20Aug%203%2C%202026%2C%2006_42_18%20PM.png",
     "hr_wellness_banner": "../Row%20Data/hr_wellness/Wellness%20%26%20HR%20Corner%20-%20August.png"
   },
   "footer": {
